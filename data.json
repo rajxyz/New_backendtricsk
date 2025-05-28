@@ -1,0 +1,12 @@
+[
+  {
+    "abbr": "WHO",
+    "full_form": "World Health Organization",
+    "description": "A UN agency responsible for international public health."
+  },
+  {
+    "abbr": "NASA",
+    "full_form": "National Aeronautics and Space Administration",
+    "description": "US government agency for space exploration and research."
+  }
+]
