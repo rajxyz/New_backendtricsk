@@ -534,7 +534,7 @@
             "Kindle",
             "Key"
         ],
-             "L": [
+        "L": [
             "Laugh",
             "Learn",
             "Lift",
@@ -1016,7 +1016,8 @@
             "Zen",
             "Zebra-striped"
         ]
-    },
+    }, 
+       "Adverb": {
        "A": [
             "Always",
             "Almost",
