@@ -32,7 +32,7 @@ DATA_FILE_MAP = {
 }
 
 TEMPLATE_FILE_MAP = {
-    "simple_sentence": "English-templates.json"
+    "simple_sentence": "English_templates.json"
 }
 
 wordbank_cache = None
