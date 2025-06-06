@@ -32,10 +32,26 @@ def fetch_abbreviation_details(term: str):
             "description": summary
         }
 
+    except wikipedia.DisambiguationError as e:
+        print(f"[ERROR] Disambiguation error: {e.options[:5]}")
+        return {
+            "abbr": normalized,
+            "full_form": "Ambiguous",
+            "description": f"Ambiguous abbreviation. Possible meanings: {', '.join(e.options[:5])}"
+        }
+
+    except wikipedia.PageError:
+        print(f"[ERROR] Page not found for: {normalized}")
+        return {
+            "abbr": normalized,
+            "full_form": "Not found",
+            "description": f"No Wikipedia page found for '{normalized}'."
+        }
+
     except Exception as e:
-        print(f"[ERROR] Exception while fetching '{normalized}': {e}")
+        print(f"[ERROR] Unexpected error while fetching '{normalized}': {e}")
         return {
             "abbr": normalized,
             "full_form": "Error",
-            "description": str(e)
+            "description": f"Unexpected error: {str(e)}"
         }
