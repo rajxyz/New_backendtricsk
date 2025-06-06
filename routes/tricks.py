@@ -10,6 +10,10 @@ from .generate_template_sentence import (
     load_templates as load_template_sentences
 )
 
+# 🆕 Import for Wikipedia fallback and caching
+from wiki_utils import fetch_abbreviation_details
+from cache import save_to_cache
+
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
@@ -79,19 +83,21 @@ def get_tricks(
     if type == TrickType.abbreviations:
         query = ''.join(input_parts).lower()
         logger.info(f"[ABBR] Searching for abbreviation: '{query}'")
-
         data = load_entities_abbr()
-        logger.debug(f"[ABBR] Full abbreviation data loaded: {data}")
-
         matched = [item for item in data if item.get("abbr", "").lower() == query]
-        logger.debug(f"[ABBR] Matches found: {len(matched)} for '{query}'")
+        logger.debug(f"[ABBR] Matches found: {len(matched)}")
 
         if not matched:
-            logger.warning(f"[ABBR] No match found for '{query.upper()}'.")
-            return {"trick": f"No abbreviation found for '{query.upper()}'."}
+            logger.info(f"[WIKI] No match found in local data, trying Wikipedia for '{query.upper()}'")
+            wiki_data = fetch_abbreviation_details(query)
+            logger.debug(f"[WIKI] Wikipedia fetch result: {wiki_data}")
+            save_to_cache(wiki_data)
+            return {
+                "trick": f"{wiki_data['abbr']} — {wiki_data['full_form']}: {wiki_data['description']}"
+            }
 
         item = matched[0]
-        logger.info(f"[ABBR] Returning match: {item}")
+        logger.debug(f"[ABBR] Match: {item}")
         return {
             "trick": f"{item['abbr']} — {item['full_form']}: {item['description']}"
         }
