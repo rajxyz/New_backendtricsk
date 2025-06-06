@@ -79,15 +79,19 @@ def get_tricks(
     if type == TrickType.abbreviations:
         query = ''.join(input_parts).lower()
         logger.info(f"[ABBR] Searching for abbreviation: '{query}'")
+
         data = load_entities_abbr()
+        logger.debug(f"[ABBR] Full abbreviation data loaded: {data}")
+
         matched = [item for item in data if item.get("abbr", "").lower() == query]
-        logger.debug(f"[ABBR] Matches found: {len(matched)}")
+        logger.debug(f"[ABBR] Matches found: {len(matched)} for '{query}'")
 
         if not matched:
+            logger.warning(f"[ABBR] No match found for '{query.upper()}'.")
             return {"trick": f"No abbreviation found for '{query.upper()}'."}
 
         item = matched[0]
-        logger.debug(f"[ABBR] Match: {item}")
+        logger.info(f"[ABBR] Returning match: {item}")
         return {
             "trick": f"{item['abbr']} — {item['full_form']}: {item['description']}"
         }
