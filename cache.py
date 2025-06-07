@@ -11,21 +11,26 @@ def load_cache():
 
     if CACHE_PATH.exists():
         with open(CACHE_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-            print(f"[DEBUG] Loaded {len(data)} entries from cache.")
-            return data
-    print("[DEBUG] Cache file not found. Returning empty list.")
-    return []
+            try:
+                data = json.load(f)
+                print(f"[DEBUG] Loaded {len(data)} entries from cache.")
+                return data
+            except json.JSONDecodeError:
+                print("[ERROR] JSON decode error — file is empty or malformed. Returning empty dict.")
+                return {}
+    print("[DEBUG] Cache file not found. Returning empty dict.")
+    return {}
 
 def save_to_cache(new_entry):
     print(f"[DEBUG] Trying to save: {new_entry}")
     cache = load_cache()
-    
-    if any(e['abbr'].lower() == new_entry['abbr'].lower() for e in cache):
-        print(f"[DEBUG] Entry '{new_entry['abbr']}' already exists in cache. Skipping save.")
-        return  # Skip if duplicate
+    key = new_entry['abbr'].lower()
 
-    cache.append(new_entry)
+    if key in cache:
+        print(f"[DEBUG] Entry '{new_entry['abbr']}' already exists in cache. Skipping save.")
+        return
+
+    cache[key] = new_entry
     
     # Ensure parent directory exists
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
