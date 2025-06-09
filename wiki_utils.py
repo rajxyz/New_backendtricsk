@@ -1,13 +1,20 @@
 import wikipedia
 import re
 
+def clean_summary(text):
+    # Remove parenthesis and brackets for clarity
+    text = re.sub(r'\s*[^)]*', '', text)
+    text = re.sub(r'\s*[^]]*', '', text)
+
+    # Truncate to the first sentence
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    return sentences[0] if sentences else text.strip()
+
 def fetch_abbreviation_details(term: str):
-    # Normalize input (e.g. "w,h,o" -> "WHO")
     normalized = term.replace(",", "").replace(".", "").replace(" ", "").upper()
     print(f"[DEBUG] Normalized term: {normalized}")
 
     try:
-        # Search Wikipedia using normalized term
         search_results = wikipedia.search(normalized)
         print(f"[DEBUG] Wikipedia search results for '{normalized}': {search_results}")
 
@@ -18,18 +25,17 @@ def fetch_abbreviation_details(term: str):
                 "description": "No summary found for this abbreviation."
             }
 
-        # Use the first result as the full form
         full_form = search_results[0]
         print(f"[DEBUG] Using first search result as full form: {full_form}")
 
-        # Get a short summary (first sentence only)
-        summary = wikipedia.summary(full_form, sentences=1)
-        print(f"[DEBUG] Summary fetched: {summary}")
+        raw_summary = wikipedia.summary(full_form, sentences=2)
+        cleaned_summary = clean_summary(raw_summary)
+        print(f"[DEBUG] Cleaned summary: {cleaned_summary}")
 
         return {
             "abbr": normalized,
             "full_form": full_form,
-            "description": summary
+            "description": cleaned_summary
         }
 
     except wikipedia.DisambiguationError as e:
