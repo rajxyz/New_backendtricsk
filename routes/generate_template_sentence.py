@@ -4,7 +4,7 @@ import inflect
 from pathlib import Path
 
 p = inflect.engine()
-BASE_DIR = Path(__file__).resolve().parent  # fixed `file` to `__file__`
+BASE_DIR = Path(__file__).resolve().parent
 
 def load_wordbank(filename="wordbank.json") -> dict:
     path = BASE_DIR / filename
@@ -84,14 +84,17 @@ def generate_template_sentence(template: str, wordbank: dict, input_letters: lis
             word = random.choice(word_list)
             if plural:
                 word = p.plural(word)
-            print(f"Chosen word: {word}")
+            print(f"[✔️] Chosen word for '{ph}': {word}")
         else:
             word = f"<{ph}>"
-            print(f"No match found, using placeholder: {word}")
+            print(f"[❌] No match found for placeholder '{ph}' with letters {input_letters}. Using fallback: {word}")
 
         # Replace both formats
         template = template.replace(f"[{ph}]", word, 1)
         template = template.replace(f"{{{ph}}}", word, 1)
 
-    print(f"Final sentence: {template}")
+    if "<" in template and ">" in template:
+        print("[⚠️ WARNING] Some placeholders may not have been replaced correctly.")
+
+    print(f"✅ Final sentence: {template}")
     return template
