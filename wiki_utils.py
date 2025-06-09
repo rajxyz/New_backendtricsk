@@ -1,63 +1,61 @@
 import wikipedia
-import re
+from external_sources import fetch_from_duckduckgo, fetch_from_abbreviations_com
 
-def clean_summary(text):
-    # Remove parenthesis and brackets for clarity
-    text = re.sub(r'\s*[^)]*', '', text)
-    text = re.sub(r'\s*[^]]*', '', text)
-
-    # Truncate to the first sentence
-    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
-    return sentences[0] if sentences else text.strip()
+# You can adjust the order of sources dynamically here
+FALLBACK_SOURCES = [
+    "wikipedia",
+    "duckduckgo",
+    "abbreviations_com",
+]
 
 def fetch_abbreviation_details(term: str):
     normalized = term.replace(",", "").replace(".", "").replace(" ", "").upper()
     print(f"[DEBUG] Normalized term: {normalized}")
 
+    for source in FALLBACK_SOURCES:
+        try:
+            if source == "wikipedia":
+                result = fetch_from_wikipedia(normalized)
+            elif source == "duckduckgo":
+                result = fetch_from_duckduckgo(normalized)
+            elif source == "abbreviations_com":
+                result = fetch_from_abbreviations_com(normalized)
+            else:
+                continue
+
+            if result and result.get("full_form") != "Not found":
+                print(f"[DEBUG] Fetched from {source}")
+                return result
+
+        except Exception as e:
+            print(f"[ERROR] {source} failed for {normalized}: {e}")
+
+    # Fallback if all sources fail
+    return {
+        "abbr": normalized,
+        "full_form": "Not found",
+        "description": "No definition found from available sources."
+    }
+
+def fetch_from_wikipedia(term: str):
     try:
-        search_results = wikipedia.search(normalized)
-        print(f"[DEBUG] Wikipedia search results for '{normalized}': {search_results}")
-
+        search_results = wikipedia.search(term)
         if not search_results:
-            return {
-                "abbr": normalized,
-                "full_form": "Not found",
-                "description": "No summary found for this abbreviation."
-            }
-
+            return None
         full_form = search_results[0]
-        print(f"[DEBUG] Using first search result as full form: {full_form}")
-
-        raw_summary = wikipedia.summary(full_form, sentences=2)
-        cleaned_summary = clean_summary(raw_summary)
-        print(f"[DEBUG] Cleaned summary: {cleaned_summary}")
-
+        summary = wikipedia.summary(full_form, sentences=1)
         return {
-            "abbr": normalized,
+            "abbr": term,
             "full_form": full_form,
-            "description": cleaned_summary
+            "description": summary
         }
-
     except wikipedia.DisambiguationError as e:
-        print(f"[ERROR] Disambiguation error: {e.options[:5]}")
         return {
-            "abbr": normalized,
+            "abbr": term,
             "full_form": "Ambiguous",
             "description": f"Ambiguous abbreviation. Possible meanings: {', '.join(e.options[:5])}"
         }
-
     except wikipedia.PageError:
-        print(f"[ERROR] Page not found for: {normalized}")
-        return {
-            "abbr": normalized,
-            "full_form": "Not found",
-            "description": f"No Wikipedia page found for '{normalized}'."
-        }
-
+        return None
     except Exception as e:
-        print(f"[ERROR] Unexpected error while fetching '{normalized}': {e}")
-        return {
-            "abbr": normalized,
-            "full_form": "Error",
-            "description": f"Unexpected error: {str(e)}"
-        }
+        raise e
