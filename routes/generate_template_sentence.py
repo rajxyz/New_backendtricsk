@@ -54,42 +54,66 @@ def generate_template_sentence(template: str, wordbank: dict, input_letters: lis
     placeholders = extract_placeholders(template)
     print(f"Detected placeholders: {placeholders}")
 
+    # Normalize wordbank keys to lowercase for flexible lookup
+    normalized_wordbank = {k.lower(): v for k, v in wordbank.items()}
+
     for ph in placeholders:
         plural = False
         base_ph = ph
 
+        # Detect plural placeholders like nouns, verbs, adjectives, adverbs
         if base_ph.endswith('s') and base_ph[:-1] in ['noun', 'verb', 'adjective', 'adverb']:
             plural = True
             base_ph = base_ph[:-1]
 
-        json_key = (
-            base_ph.capitalize() + 's'
-            if base_ph in ['noun', 'verb', 'adjective', 'adverb']
-            else base_ph
-        )
+        base_key = base_ph.lower()
+        plural_key = base_key + 's'
+
+        # Determine which key to use in the wordbank (plural or singular)
+        if plural_key in normalized_wordbank:
+            lookup_key = plural_key
+        elif base_key in normalized_wordbank:
+            lookup_key = base_key
+        else:
+            lookup_key = None
 
         print(f"\nHandling placeholder: {ph}")
         print(f"Base placeholder: {base_ph}")
         print(f"Plural: {plural}")
-        print(f"Looking in wordbank key: {json_key}")
+        print(f"Looking in wordbank key: {lookup_key}")
 
         word_list = []
-        for letter in input_letters:
-            upper_letter = letter.upper()
-            matched = wordbank.get(json_key, {}).get(upper_letter, [])
-            print(f"  Letter '{upper_letter}' => {matched}")
-            word_list.extend(matched)
+        if lookup_key:
+            for letter in input_letters:
+                letter_upper = letter.upper()
+                letter_lower = letter.lower()
 
-        if word_list:
+                # Try uppercase letter key, then lowercase letter key
+                matched = normalized_wordbank[lookup_key].get(letter_upper) or normalized_wordbank[lookup_key].get(letter_lower) or []
+                print(f"  Letter '{letter}' (upper: '{letter_upper}') => {matched}")
+                word_list.extend(matched)
+        else:
+            print(f"[❌] No matching key found for placeholder '{ph}' in wordbank.")
+
+        # Fallback words for some placeholders if no match found
+        fallback_words = {
+            "adverb": ["quickly", "silently", "boldly", "calmly", "gracefully"],
+            "preposition": ["under", "over", "beside", "with", "without"],
+            "noun": ["thing", "object", "item"],
+            "verb": ["do", "make", "go"],
+            "adjective": ["good", "nice", "happy"],
+        }
+
+        if not word_list:
+            word = random.choice(fallback_words.get(base_ph, [f"<{ph}>"]))
+            print(f"[❌] No match found for placeholder '{ph}' with letters {input_letters}. Using fallback: {word}")
+        else:
             word = random.choice(word_list)
             if plural:
                 word = p.plural(word)
             print(f"[✔️] Chosen word for '{ph}': {word}")
-        else:
-            word = f"<{ph}>"
-            print(f"[❌] No match found for placeholder '{ph}' with letters {input_letters}. Using fallback: {word}")
 
-        # Replace both formats
+        # Replace both placeholder styles, one occurrence at a time
         template = template.replace(f"[{ph}]", word, 1)
         template = template.replace(f"{{{ph}}}", word, 1)
 
