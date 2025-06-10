@@ -54,14 +54,14 @@ def generate_template_sentence(template: str, wordbank: dict, input_letters: lis
     placeholders = extract_placeholders(template)
     print(f"Detected placeholders: {placeholders}")
 
-    # Normalize wordbank keys to lowercase for flexible lookup
     normalized_wordbank = {k.lower(): v for k, v in wordbank.items()}
+
+    used_letters = set()
 
     for ph in placeholders:
         plural = False
         base_ph = ph
 
-        # Detect plural placeholders like nouns, verbs, adjectives, adverbs
         if base_ph.endswith('s') and base_ph[:-1] in ['noun', 'verb', 'adjective', 'adverb']:
             plural = True
             base_ph = base_ph[:-1]
@@ -69,7 +69,6 @@ def generate_template_sentence(template: str, wordbank: dict, input_letters: lis
         base_key = base_ph.lower()
         plural_key = base_key + 's'
 
-        # Determine which key to use in the wordbank (plural or singular)
         if plural_key in normalized_wordbank:
             lookup_key = plural_key
         elif base_key in normalized_wordbank:
@@ -82,43 +81,40 @@ def generate_template_sentence(template: str, wordbank: dict, input_letters: lis
         print(f"Plural: {plural}")
         print(f"Looking in wordbank key: {lookup_key}")
 
-        word_list = []
+        selected_word = None
+
         if lookup_key:
             for letter in input_letters:
+                if letter in used_letters:
+                    continue
+
                 letter_upper = letter.upper()
                 letter_lower = letter.lower()
 
-                # Try uppercase letter key, then lowercase letter key
                 matched = normalized_wordbank[lookup_key].get(letter_upper) or normalized_wordbank[lookup_key].get(letter_lower) or []
-                print(f"  Letter '{letter}' (upper: '{letter_upper}') => {matched}")
-                word_list.extend(matched)
-        else:
-            print(f"[❌] No matching key found for placeholder '{ph}' in wordbank.")
+                if matched:
+                    selected_word = random.choice(matched)
+                    used_letters.add(letter)
+                    print(f"[✔️] Selected word '{selected_word}' for letter '{letter}'")
+                    break
 
-        # Fallback words for some placeholders if no match found
         fallback_words = {
-            "adverb": ["quickly", "silently", "boldly", "calmly", "gracefully"],
-            "preposition": ["under", "over", "beside", "with", "without"],
-            "noun": ["thing", "object", "item"],
-            "verb": ["do", "make", "go"],
-            "adjective": ["good", "nice", "happy"],
+            "adverb": ["fast", "well", "soon", "boldly", "kindly"],
+            "preposition": ["with", "without", "under", "over"],
+            "noun": ["thing", "idea", "item", "goal"],
+            "verb": ["go", "run", "do", "make"],
+            "adjective": ["cool", "big", "smart", "fun"]
         }
 
-        if not word_list:
-            word = random.choice(fallback_words.get(base_ph, [f"<{ph}>"]))
-            print(f"[❌] No match found for placeholder '{ph}' with letters {input_letters}. Using fallback: {word}")
-        else:
-            word = random.choice(word_list)
-            if plural:
-                word = p.plural(word)
-            print(f"[✔️] Chosen word for '{ph}': {word}")
+        if not selected_word:
+            selected_word = random.choice(fallback_words.get(base_ph, [f"<{ph}>"]))
+            print(f"[❌] Using fallback word: {selected_word}")
 
-        # Replace both placeholder styles, one occurrence at a time
-        template = template.replace(f"[{ph}]", word, 1)
-        template = template.replace(f"{{{ph}}}", word, 1)
+        if plural:
+            selected_word = p.plural(selected_word)
 
-    if "<" in template and ">" in template:
-        print("[⚠️ WARNING] Some placeholders may not have been replaced correctly.")
+        template = template.replace(f"[{ph}]", selected_word, 1)
+        template = template.replace(f"{{{ph}}}", selected_word, 1)
 
     print(f"✅ Final sentence: {template}")
     return template
