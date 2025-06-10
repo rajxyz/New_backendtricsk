@@ -10,7 +10,7 @@ from .generate_template_sentence import (
     load_templates as load_template_sentences
 )
 
-# 🆕 Import for Wikipedia fallback and caching
+# Wikipedia + other fetch tools
 from wiki_utils import fetch_abbreviation_details
 from cache import save_to_cache
 
@@ -87,20 +87,48 @@ def get_tricks(
         matched = [item for item in data if item.get("abbr", "").lower() == query]
         logger.debug(f"[ABBR] Matches found: {len(matched)}")
 
-        if not matched:
-            logger.info(f"[WIKI] No match found in local data, trying Wikipedia for '{query.upper()}'")
-            wiki_data = fetch_abbreviation_details(query)
-            logger.debug(f"[WIKI] Wikipedia fetch result: {wiki_data}")
-            save_to_cache(wiki_data)
+        if matched:
+            item = matched[0]
             return {
-                "trick": f"{wiki_data['abbr']} — {wiki_data['full_form']}: {wiki_data['description']}"
+                "trick": f"{item['abbr']} — {item['full_form']}: {item['description']}"
             }
 
-        item = matched[0]
-        logger.debug(f"[ABBR] Match: {item}")
-        return {
-            "trick": f"{item['abbr']} — {item['full_form']}: {item['description']}"
-        }
+        logger.info(f"[WIKI] No match found in local data, trying Wikipedia for '{query.upper()}'")
+        wiki_data = fetch_abbreviation_details(query)
+        logger.debug(f"[WIKI] Wikipedia fetch result: {wiki_data}")
+
+        # Load wordbank if not already cached
+        if wordbank_cache is None:
+            wordbank_cache = load_wordbank()
+
+        # Try building abbreviation from letters using wordbank
+        built_words = []
+        for i, letter in enumerate(input_parts):
+            letter = letter.upper()
+            possible_words = []
+
+            for category in ['nouns', 'adjectives']:
+                if letter in wordbank_cache.get(category, {}):
+                    possible_words += wordbank_cache[category][letter]
+
+            built_word = random.choice(possible_words).capitalize() if possible_words else letter
+            built_words.append(built_word)
+
+        built_full_form = " ".join(built_words)
+
+        trick_output = f"{query.upper()} — {built_full_form}"
+        if wiki_data["full_form"] != "Not found":
+            trick_output += f": {wiki_data['description']}"
+        else:
+            trick_output += ": Description not available."
+
+        save_to_cache({
+            "abbr": query.upper(),
+            "full_form": built_full_form,
+            "description": wiki_data.get("description", "No description.")
+        })
+
+        return {"trick": trick_output}
 
     # ---- SIMPLE SENTENCE TRICK ----
     elif type == TrickType.simple_sentence:
