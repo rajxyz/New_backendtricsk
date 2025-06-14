@@ -1,6 +1,7 @@
 import json
 import random
 import logging
+import re
 from fastapi import APIRouter, Query
 from pathlib import Path
 from enum import Enum
@@ -63,6 +64,18 @@ def load_wordbank():
         logger.debug(f"[WORDBANK] Loaded categories: {list(data.keys())}")
         return data
 
+# 🆕 NEW: Normalize input to handle l,t,m or ltm or lotus,torch,mango etc
+def extract_letters(input_str):
+    if "," in input_str:
+        parts = [p.strip() for p in input_str.split(",") if p.strip()]
+    else:
+        # Single word or continuous letters
+        if re.match(r"^[a-zA-Z]+$", input_str.strip()):
+            parts = list(input_str.strip())
+        else:
+            parts = [w.strip() for w in re.findall(r'\b\w+\b', input_str)]
+    return parts
+
 @router.get("/api/tricks")
 def get_tricks(
     type: TrickType = Query(..., description="Type of trick"),
@@ -72,8 +85,8 @@ def get_tricks(
     logger.info(f"[API] Trick Type: {type}")
     logger.info(f"[API] Input Letters Raw: {letters}")
 
-    input_parts = [w.strip() for w in letters.split(",") if w.strip()]
-    logger.debug(f"[API] Cleaned Letters: {input_parts}")
+    input_parts = extract_letters(letters)
+    logger.debug(f"[API] Normalized Input Letters/Words: {input_parts}")
 
     if not input_parts:
         logger.warning("[API] Empty input letters!")
