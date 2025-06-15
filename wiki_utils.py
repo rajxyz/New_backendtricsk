@@ -1,6 +1,6 @@
 import wikipedia
-import re
 from external_sources import fetch_from_duckduckgo, fetch_from_abbreviations_com
+import re
 
 FALLBACK_SOURCES = [
     "wikipedia",
@@ -8,8 +8,10 @@ FALLBACK_SOURCES = [
     "abbreviations_com",
 ]
 
+# Optional: You can update preferred keywords if needed
 PREFERRED_KEYWORDS = [
-    "company", "corporation", "organization", "institute", "agency", "authority", "committee", "commission", "center"
+    "company", "corporation", "organization", "institute", "agency",
+    "authority", "committee", "commission", "center"
 ]
 
 def fetch_abbreviation_details(term: str):
@@ -40,13 +42,6 @@ def fetch_abbreviation_details(term: str):
         "description": "No definition found from available sources."
     }
 
-def extract_full_form_from_text(abbr: str, text: str) -> str:
-    # Example: "SSTM stands for Super Sonic Transport Mission."
-    pattern = re.compile(rf"\b{abbr}\b\s+(stands for|means|is short for|refers to)\s+(.*?)[\.\,\n]", re.IGNORECASE)
-    match = pattern.search(text)
-    if match:
-        return match.group(2).strip()
-    return ""
 
 def fetch_from_wikipedia(term: str):
     try:
@@ -57,6 +52,8 @@ def fetch_from_wikipedia(term: str):
         for result in search_results[:5]:
             try:
                 summary = wikipedia.summary(result, sentences=2)
+
+                # ✅ Try extracting full form from the summary
                 full_form = extract_full_form_from_text(term, summary)
                 if full_form:
                     return {
@@ -65,16 +62,10 @@ def fetch_from_wikipedia(term: str):
                         "description": summary
                     }
 
-                # Fallback: use title as full_form if it contains all term letters
-                if all(c.lower() in result.lower() for c in term.lower()):
-                    return {
-                        "abbr": term,
-                        "full_form": result,
-                        "description": summary
-                    }
-            except Exception as inner_e:
+            except Exception:
                 continue
 
+        # ❌ No valid full form found
         return None
 
     except wikipedia.DisambiguationError as e:
@@ -87,3 +78,24 @@ def fetch_from_wikipedia(term: str):
         return None
     except Exception as e:
         raise e
+
+
+def extract_full_form_from_text(abbr: str, text: str) -> str:
+    """
+    Try to intelligently extract a full form of abbreviation from Wikipedia summary.
+    Looks for capital words matching the abbreviation letters.
+    """
+    words = re.findall(r'\b[A-Z][a-z]+\b', text)
+    if not words or len(words) < len(abbr):
+        return None
+
+    candidates = []
+    abbr = abbr.upper()
+
+    for i in range(len(words) - len(abbr) + 1):
+        chunk = words[i:i + len(abbr)]
+        initials = ''.join([w[0].upper() for w in chunk])
+        if initials == abbr:
+            candidates.append(' '.join(chunk))
+
+    return candidates[0] if candidates else None
