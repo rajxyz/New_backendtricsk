@@ -1,6 +1,6 @@
 import wikipedia
-from external_sources import fetch_from_duckduckgo, fetch_from_abbreviations_com
 import re
+from external_sources import fetch_from_duckduckgo, fetch_from_abbreviations_com
 
 FALLBACK_SOURCES = [
     "wikipedia",
@@ -8,11 +8,35 @@ FALLBACK_SOURCES = [
     "abbreviations_com",
 ]
 
-# Optional: You can update preferred keywords if needed
-PREFERRED_KEYWORDS = [
-    "company", "corporation", "organization", "institute", "agency",
-    "authority", "committee", "commission", "center"
+# Common stopwords to skip while matching letters
+STOPWORDS = {"is", "a", "an", "the", "of", "in", "on", "and", "to", "for", "as", "with", "by", "at", "from"}
+
+# Phrases that often introduce a definition
+DEFINITION_PATTERNS = [
+    r"{abbr} (is|was|refers to|stands for|means|, short for)",
+    r"The acronym {abbr} (is|was|means|stands for)"
 ]
+
+def extract_full_form_from_text(abbr: str, text: str) -> str:
+    abbr_upper = abbr.upper()
+    abbr_letters = list(abbr_upper)
+
+    for pattern in DEFINITION_PATTERNS:
+        regex = re.compile(pattern.format(abbr=re.escape(abbr_upper)), re.IGNORECASE)
+        match = regex.search(text)
+        if match:
+            start_idx = match.end()
+            trailing_text = text[start_idx:]
+
+            # Extract next 10 words after the definition pattern
+            words = re.findall(r'\b\w+\b', trailing_text)
+            cleaned_words = [w for w in words if w.lower() not in STOPWORDS]
+
+            if len(cleaned_words) >= len(abbr_letters):
+                match_letters = cleaned_words[:len(abbr_letters)]
+                if all(w[0].upper() == abbr_letters[i] for i, w in enumerate(match_letters)):
+                    return ' '.join(match_letters)
+    return None
 
 def fetch_abbreviation_details(term: str):
     normalized = term.replace(",", "").replace(".", "").replace(" ", "").upper()
@@ -42,7 +66,6 @@ def fetch_abbreviation_details(term: str):
         "description": "No definition found from available sources."
     }
 
-
 def fetch_from_wikipedia(term: str):
     try:
         search_results = wikipedia.search(term)
@@ -53,7 +76,6 @@ def fetch_from_wikipedia(term: str):
             try:
                 summary = wikipedia.summary(result, sentences=2)
 
-                # ✅ Try extracting full form from the summary
                 full_form = extract_full_form_from_text(term, summary)
                 if full_form:
                     return {
@@ -65,7 +87,6 @@ def fetch_from_wikipedia(term: str):
             except Exception:
                 continue
 
-        # ❌ No valid full form found
         return None
 
     except wikipedia.DisambiguationError as e:
@@ -78,24 +99,4 @@ def fetch_from_wikipedia(term: str):
         return None
     except Exception as e:
         raise e
-
-
-def extract_full_form_from_text(abbr: str, text: str) -> str:
-    """
-    Try to intelligently extract a full form of abbreviation from Wikipedia summary.
-    Looks for capital words matching the abbreviation letters.
-    """
-    words = re.findall(r'\b[A-Z][a-z]+\b', text)
-    if not words or len(words) < len(abbr):
-        return None
-
-    candidates = []
-    abbr = abbr.upper()
-
-    for i in range(len(words) - len(abbr) + 1):
-        chunk = words[i:i + len(abbr)]
-        initials = ''.join([w[0].upper() for w in chunk])
-        if initials == abbr:
-            candidates.append(' '.join(chunk))
-
-    return candidates[0] if candidates else None
+            
