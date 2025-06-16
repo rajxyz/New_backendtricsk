@@ -66,11 +66,11 @@ def load_wordbank():
 # Normalize input like "ltm", "l,t,m", "lotus torch mango"
 def extract_letters(input_str):
     if "," in input_str:
-        parts = [p.strip() for p in input_str.split(",") if p.strip()]
+        parts = [p.strip().upper() for p in input_str.split(",") if p.strip()]
     elif re.match(r"^[a-zA-Z]+$", input_str.strip()):
-        parts = list(input_str.strip())
+        parts = list(input_str.strip().upper())
     else:
-        parts = [w.strip() for w in re.findall(r'\b\w+\b', input_str)]
+        parts = [w[0].upper() for w in re.findall(r'\b\w+', input_str)]
     return parts
 
 @router.get("/api/tricks")
@@ -91,20 +91,22 @@ def get_tricks(
 
     # ---- ABBREVIATIONS ----
     if type == TrickType.abbreviations:
-        query = ''.join(input_parts).lower()
-        logger.info(f"[ABBR] Searching for abbreviation: '{query}'")
-
         data = load_entities_abbr()
-        matched = [item for item in data if item.get("abbr", "").lower() == query]
+        tricks = []
 
-        if matched:
-            item = matched[0]
-            return {
-                "trick": f"{item['abbr']} — {item['full_form']}: {item['description']}"
-            }
+        for letter in input_parts:
+            match = next((item for item in data if item.get("abbr", "").upper() == letter), None)
+            if match:
+                adj = random.choice(match["adj"])
+                noun = random.choice(match["noun"])
+                tricks.append(f"{letter} — {adj} {noun}")
+            else:
+                tricks.append(f"{letter} — ???")
 
-        logger.info("[ABBR] No match found in local data.")
-        return {"trick": random.choice(default_lines)}
+        # Check if all are "???" — no matches at all
+        if all("???" in t for t in tricks):
+            return {"trick": random.choice(default_lines)}
+        return {"trick": ", ".join(tricks)}
 
     # ---- SIMPLE SENTENCE ----
     elif type == TrickType.simple_sentence:
