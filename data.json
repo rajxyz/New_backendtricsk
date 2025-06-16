@@ -1,12 +1,314 @@
-[
-  {
-    "abbr": "WHO",
-    "full_form": "World Health Organization",
-    "description": "A UN agency responsible for international public health."
+{
+  "A": {
+    "adj": [
+      "Agile",
+      "Atomic",
+      "Adaptive"
+    ],
+    "noun": [
+      "Algorithm",
+      "Array",
+      "Agent"
+    ]
   },
-  {
-    "abbr": "NASA",
-    "full_form": "National Aeronautics and Space Administration",
-    "description": "US government agency for space exploration and research."
+  "B": {
+    "adj": [
+      "Brilliant",
+      "Bold",
+      "Binary"
+    ],
+    "noun": [
+      "Bot",
+      "Buffer",
+      "Bridge"
+    ]
+  },
+  "C": {
+    "adj": [
+      "Cyber",
+      "Creative",
+      "Critical"
+    ],
+    "noun": [
+      "Circuit",
+      "Core",
+      "Controller"
+    ]
+  },
+  "D": {
+    "adj": [
+      "Dynamic",
+      "Deep",
+      "Daring"
+    ],
+    "noun": [
+      "Drive",
+      "Device",
+      "Database"
+    ]
+  },
+  "E": {
+    "adj": [
+      "Efficient",
+      "Electric",
+      "Elegant"
+    ],
+    "noun": [
+      "Engine",
+      "Entity",
+      "Element"
+    ]
+  },
+  "F": {
+    "adj": [
+      "Fast",
+      "Futuristic",
+      "Fierce"
+    ],
+    "noun": [
+      "Function",
+      "Firewall",
+      "Framework"
+    ]
+  },
+  "G": {
+    "adj": [
+      "Global",
+      "Gigantic",
+      "Grounded"
+    ],
+    "noun": [
+      "Gateway",
+      "Grid",
+      "Generator"
+    ]
+  },
+  "H": {
+    "adj": [
+      "Hyper",
+      "Hidden",
+      "High-tech"
+    ],
+    "noun": [
+      "Hub",
+      "Hardware",
+      "Handler"
+    ]
+  },
+  "I": {
+    "adj": [
+      "Intelligent",
+      "Innovative",
+      "Invisible"
+    ],
+    "noun": [
+      "Interface",
+      "Index",
+      "Instance"
+    ]
+  },
+  "J": {
+    "adj": [
+      "Joint",
+      "Jagged",
+      "Just"
+    ],
+    "noun": [
+      "Jet",
+      "Junction",
+      "Job"
+    ]
+  },
+  "K": {
+    "adj": [
+      "Kinetic",
+      "Known",
+      "Key"
+    ],
+    "noun": [
+      "Kernel",
+      "Key",
+      "Kit"
+    ]
+  },
+  "L": {
+    "adj": [
+      "Luminous",
+      "Logical",
+      "Lean"
+    ],
+    "noun": [
+      "Layer",
+      "Loop",
+      "Library"
+    ]
+  },
+  "M": {
+    "adj": [
+      "Magnetic",
+      "Modern",
+      "Mystic"
+    ],
+    "noun": [
+      "Module",
+      "Matrix",
+      "Mechanism"
+    ]
+  },
+  "N": {
+    "adj": [
+      "Nimble",
+      "Neutral",
+      "Nano"
+    ],
+    "noun": [
+      "Node",
+      "Network",
+      "Namespace"
+    ]
+  },
+  "O": {
+    "adj": [
+      "Optimal",
+      "Obscure",
+      "Open"
+    ],
+    "noun": [
+      "Object",
+      "Operation",
+      "Output"
+    ]
+  },
+  "P": {
+    "adj": [
+      "Powerful",
+      "Progressive",
+      "Prime"
+    ],
+    "noun": [
+      "Processor",
+      "Protocol",
+      "Pipeline"
+    ]
+  },
+  "Q": {
+    "adj": [
+      "Quick",
+      "Quantum",
+      "Quiet"
+    ],
+    "noun": [
+      "Query",
+      "Queue",
+      "Quorum"
+    ]
+  },
+  "R": {
+    "adj": [
+      "Robust",
+      "Rapid",
+      "Reactive"
+    ],
+    "noun": [
+      "Router",
+      "Registry",
+      "Resource"
+    ]
+  },
+  "S": {
+    "adj": [
+      "Smart",
+      "Secure",
+      "Silent"
+    ],
+    "noun": [
+      "System",
+      "Sensor",
+      "Stack"
+    ]
+  },
+  "T": {
+    "adj": [
+      "Tactical",
+      "Techie",
+      "Trusted"
+    ],
+    "noun": [
+      "Terminal",
+      "Thread",
+      "Tracker"
+    ]
+  },
+  "U": {
+    "adj": [
+      "Ultimate",
+      "Ultra",
+      "Unified"
+    ],
+    "noun": [
+      "Unit",
+      "Utility",
+      "Update"
+    ]
+  },
+  "V": {
+    "adj": [
+      "Virtual",
+      "Vast",
+      "Valiant"
+    ],
+    "noun": [
+      "Vector",
+      "Volume",
+      "Vault"
+    ]
+  },
+  "W": {
+    "adj": [
+      "Wise",
+      "Wild",
+      "Wired"
+    ],
+    "noun": [
+      "Widget",
+      "Wire",
+      "Workflow"
+    ]
+  },
+  "X": {
+    "adj": [
+      "Xenial",
+      "Xtreme",
+      "Xeno"
+    ],
+    "noun": [
+      "X-ray",
+      "Xeno-core",
+      "X-bot"
+    ]
+  },
+  "Y": {
+    "adj": [
+      "Young",
+      "Yielding",
+      "Yonder"
+    ],
+    "noun": [
+      "Yield",
+      "Yard",
+      "Yoke"
+    ]
+  },
+  "Z": {
+    "adj": [
+      "Zen",
+      "Zonal",
+      "Zero"
+    ],
+    "noun": [
+      "Zone",
+      "Zip",
+      "Z-Stack"
+    ]
   }
-]
+}
