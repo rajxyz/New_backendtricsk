@@ -6,15 +6,10 @@ from fastapi import APIRouter, Query
 from pathlib import Path
 from enum import Enum
 
-# Import your template logic
 from .generate_template_sentence import (
     generate_template_sentence,
     load_templates as load_template_sentences
 )
-
-# Wikipedia + other fetch tools
-from wiki_utils import fetch_abbreviation_details
-from cache import save_to_cache
 
 # Setup
 router = APIRouter()
@@ -97,6 +92,8 @@ def get_tricks(
     # ---- ABBREVIATIONS ----
     if type == TrickType.abbreviations:
         query = ''.join(input_parts).lower()
+        logger.info(f"[ABBR] Searching for abbreviation: '{query}'")
+
         data = load_entities_abbr()
         matched = [item for item in data if item.get("abbr", "").lower() == query]
 
@@ -106,39 +103,8 @@ def get_tricks(
                 "trick": f"{item['abbr']} — {item['full_form']}: {item['description']}"
             }
 
-        logger.info(f"[WIKI] No match found locally, checking Wikipedia: {query.upper()}")
-        wiki_data = fetch_abbreviation_details(query)
-
-        if wordbank_cache is None:
-            wordbank_cache = load_wordbank()
-
-        built_words = []
-        for i, letter in enumerate(input_parts):
-            letter = letter.upper()
-            category = 'adjectives' if i % 2 == 0 else 'nouns'
-            options = wordbank_cache.get(category, {}).get(letter, [])
-
-            if not options:
-                logger.warning(f"[WORDBANK] No words for '{letter}' in category '{category}'")
-                built_words.append(letter)
-            else:
-                built_words.append(random.choice(options).capitalize())
-
-        built_full_form = " ".join(built_words)
-
-        trick_output = f"{query.upper()} — {built_full_form}"
-        if wiki_data.get("full_form") != "Not found":
-            trick_output += f": {wiki_data.get('description', '')}"
-        else:
-            trick_output += ": Description not available."
-
-        save_to_cache({
-            "abbr": query.upper(),
-            "full_form": built_full_form,
-            "description": wiki_data.get("description", "No description.")
-        })
-
-        return {"trick": trick_output}
+        logger.info("[ABBR] No match found in local data.")
+        return {"trick": random.choice(default_lines)}
 
     # ---- SIMPLE SENTENCE ----
     elif type == TrickType.simple_sentence:
@@ -147,6 +113,7 @@ def get_tricks(
 
         templates = load_template_sentences(TEMPLATE_FILE_MAP["simple_sentence"])
         if not templates:
+            logger.warning("[SENTENCE] No templates found.")
             return {"trick": "No templates found."}
 
         template = random.choice(templates)
@@ -158,4 +125,5 @@ def get_tricks(
         return {"trick": sentence}
 
     # ---- INVALID TYPE ----
+    logger.warning("[API] Invalid trick type selected.")
     return {"trick": "Invalid trick type selected."}
