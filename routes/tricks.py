@@ -97,15 +97,15 @@ def get_tricks(
         for letter in input_parts:
             match = next((item for item in data if item.get("abbr", "").upper() == letter), None)
             if match:
-                adj = random.choice(match["adj"])
-                noun = random.choice(match["noun"])
-                tricks.append(f"{letter} — {adj} {noun}")
+                # ONLY one word: noun
+                word = random.choice(match["noun"])
+                tricks.append(f"{letter} — {word}")
             else:
                 tricks.append(f"{letter} — ???")
 
-        # Check if all are "???" — no matches at all
         if all("???" in t for t in tricks):
             return {"trick": random.choice(default_lines)}
+
         return {"trick": ", ".join(tricks)}
 
     # ---- SIMPLE SENTENCE ----
