@@ -93,20 +93,32 @@ def get_tricks(
     if type == TrickType.abbreviations:
         data = load_entities_abbr()
         tricks = []
+        descriptions = []
 
         for letter in input_parts:
             match = next((item for item in data if item.get("abbr", "").upper() == letter), None)
             if match:
-                # ONLY one word: noun
-                word = random.choice(match["noun"])
-                tricks.append(f"{letter} — {word}")
+                adj = random.choice(match.get("adj", []))
+                noun = random.choice(match.get("noun", []))
+                tricks.append(f"{letter} — {adj} {noun}")
+
+                template = match.get("description_template")
+                if template:
+                    try:
+                        description = template.format(adj=adj, noun=noun)
+                        descriptions.append(description)
+                    except Exception as e:
+                        logger.error(f"Error formatting description: {e}")
             else:
                 tricks.append(f"{letter} — ???")
 
         if all("???" in t for t in tricks):
             return {"trick": random.choice(default_lines)}
 
-        return {"trick": ", ".join(tricks)}
+        return {
+            "trick": ", ".join(tricks),
+            "description": " ".join(descriptions) if descriptions else None
+        }
 
     # ---- SIMPLE SENTENCE ----
     elif type == TrickType.simple_sentence:
