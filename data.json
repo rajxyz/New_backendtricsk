@@ -1,158 +1,47 @@
-[
-  {
-    "abbr": "A",
-    "adj": ["Agile", "Atomic", "Adaptive"],
-    "noun": ["Algorithm", "Array", "Agent"],
-    "description_template": "{adj} {noun} ek dynamic structure hai jo fast and flexible computing ke liye design hota hai."
+{
+  "nouns": {
+    "A": ["Application", "Architecture", "Access"],
+    "B": ["Blockchain", "Bridge", "Buffer"],
+    "C": ["Cloud", "Connection", "Control"],
+    "D": ["Database", "Device", "Design"],
+    "E": ["Engine", "Entity", "Environment"],
+    "F": ["Firewall", "Framework", "Function"],
+    "G": ["Gateway", "Graph", "Grid"],
+    "H": ["Hub", "Hardware", "Host"],
+    "I": ["Interface", "Infrastructure", "Input"],
+    "J": ["Java", "Junction", "Job"],
+    "K": ["Kernel", "Key", "Kit"],
+    "L": ["Language", "Layer", "Logic"],
+    "M": ["Module", "Matrix", "Memory"],
+    "N": ["Network", "Node", "Navigation"],
+    "O": ["Operation", "Object", "Output"],
+    "P": ["Process", "Protocol", "Platform"],
+    "Q": ["Query", "Queue", "Quota"],
+    "R": ["Router", "Request", "Resource"],
+    "S": ["System", "Storage", "Service"],
+    "T": ["Technology", "Transmission", "Tool"],
+    "U": ["Unit", "User", "Utility"],
+    "V": ["Virtualization", "Value", "Volume"],
+    "W": ["Web", "Workflow", "Window"],
+    "X": ["Xenon", "Xchange", "X-factor"],
+    "Y": ["Yield", "Year", "Yard"],
+    "Z": ["Zone", "Zebra", "Zettabyte"]
   },
-  {
-    "abbr": "B",
-    "adj": ["Brilliant", "Bold", "Binary"],
-    "noun": ["Bot", "Buffer", "Bridge"],
-    "description_template": "{adj} {noun} technology ko efficient aur interconnected banata hai."
-  },
-  {
-    "abbr": "C",
-    "adj": ["Cyber", "Creative", "Critical"],
-    "noun": ["Circuit", "Core", "Controller"],
-    "description_template": "{adj} {noun} ek important component hai jo systems ke beech coordination banata hai."
-  },
-  {
-    "abbr": "D",
-    "adj": ["Dynamic", "Deep", "Daring"],
-    "noun": ["Drive", "Device", "Database"],
-    "description_template": "{adj} {noun} data storage aur processing me agility aur depth lata hai."
-  },
-  {
-    "abbr": "E",
-    "adj": ["Efficient", "Electric", "Elegant"],
-    "noun": ["Engine", "Entity", "Element"],
-    "description_template": "{adj} {noun} system performance aur structure ko optimize karta hai."
-  },
-  {
-    "abbr": "F",
-    "adj": ["Fast", "Futuristic", "Fierce"],
-    "noun": ["Function", "Firewall", "Framework"],
-    "description_template": "{adj} {noun} modern applications ke liye protective aur rapid operations enable karta hai."
-  },
-  {
-    "abbr": "G",
-    "adj": ["Global", "Gigantic", "Grounded"],
-    "noun": ["Gateway", "Grid", "Generator"],
-    "description_template": "{adj} {noun} information flow aur power distribution ka base banata hai."
-  },
-  {
-    "abbr": "H",
-    "adj": ["Hyper", "Hidden", "High-tech"],
-    "noun": ["Hub", "Hardware", "Handler"],
-    "description_template": "{adj} {noun} ek powerful unit hota hai jo data exchange aur control me kaam aata hai."
-  },
-  {
-    "abbr": "I",
-    "adj": ["Intelligent", "Innovative", "Invisible"],
-    "noun": ["Interface", "Index", "Instance"],
-    "description_template": "{adj} {noun} data access aur interaction ko smarter aur smoother banata hai."
-  },
-  {
-    "abbr": "J",
-    "adj": ["Joint", "Jagged", "Just"],
-    "noun": ["Jet", "Junction", "Job"],
-    "description_template": "{adj} {noun} systems ke interconnected elements ko streamline karta hai."
-  },
-  {
-    "abbr": "K",
-    "adj": ["Kinetic", "Known", "Key"],
-    "noun": ["Kernel", "Key", "Kit"],
-    "description_template": "{adj} {noun} system ke essential core ko represent karta hai."
-  },
-  {
-    "abbr": "L",
-    "adj": ["Luminous", "Logical", "Lean"],
-    "noun": ["Layer", "Loop", "Library"],
-    "description_template": "{adj} {noun} programming aur design me clarity aur efficiency lata hai."
-  },
-  {
-    "abbr": "M",
-    "adj": ["Magnetic", "Modern", "Mystic"],
-    "noun": ["Module", "Matrix", "Mechanism"],
-    "description_template": "{adj} {noun} systems ke modular aur intelligent behavior ko define karta hai."
-  },
-  {
-    "abbr": "N",
-    "adj": ["Nimble", "Neutral", "Nano"],
-    "noun": ["Node", "Network", "Namespace"],
-    "description_template": "{adj} {noun} ek fast-moving aur scalable digital structure hota hai."
-  },
-  {
-    "abbr": "O",
-    "adj": ["Optimal", "Obscure", "Open"],
-    "noun": ["Object", "Operation", "Output"],
-    "description_template": "{adj} {noun} coding aur system operations ka central part hota hai."
-  },
-  {
-    "abbr": "P",
-    "adj": ["Powerful", "Progressive", "Prime"],
-    "noun": ["Processor", "Protocol", "Pipeline"],
-    "description_template": "{adj} {noun} speed aur data handling ko enhance karta hai."
-  },
-  {
-    "abbr": "Q",
-    "adj": ["Quick", "Quantum", "Quiet"],
-    "noun": ["Query", "Queue", "Quorum"],
-    "description_template": "{adj} {noun} decision making aur data access me tezi aur balance lata hai."
-  },
-  {
-    "abbr": "R",
-    "adj": ["Robust", "Rapid", "Reactive"],
-    "noun": ["Router", "Registry", "Resource"],
-    "description_template": "{adj} {noun} information distribution aur control systems ka key part hai."
-  },
-  {
-    "abbr": "S",
-    "adj": ["Smart", "Secure", "Silent"],
-    "noun": ["System", "Sensor", "Stack"],
-    "description_template": "{adj} {noun} modern devices me intelligence aur safety ensure karta hai."
-  },
-  {
-    "abbr": "T",
-    "adj": ["Tactical", "Techie", "Trusted"],
-    "noun": ["Terminal", "Thread", "Tracker"],
-    "description_template": "{adj} {noun} execution aur monitoring me precision aur reliability lata hai."
-  },
-  {
-    "abbr": "U",
-    "adj": ["Ultimate", "Ultra", "Unified"],
-    "noun": ["Unit", "Utility", "Update"],
-    "description_template": "{adj} {noun} ek essential building block hai jo function ko simplify karta hai."
-  },
-  {
-    "abbr": "V",
-    "adj": ["Virtual", "Vast", "Valiant"],
-    "noun": ["Vector", "Volume", "Vault"],
-    "description_template": "{adj} {noun} data representation aur protection ke liye use hota hai."
-  },
-  {
-    "abbr": "W",
-    "adj": ["Wise", "Wild", "Wired"],
-    "noun": ["Widget", "Wire", "Workflow"],
-    "description_template": "{adj} {noun} user interfaces aur connections me smooth operation deta hai."
-  },
-  {
-    "abbr": "X",
-    "adj": ["Xenial", "Xtreme", "Xeno"],
-    "noun": ["X-ray", "Xeno-core", "X-bot"],
-    "description_template": "{adj} {noun} futuristic aur high-tech applications me use hota hai."
-  },
-  {
-    "abbr": "Y",
-    "adj": ["Young", "Yielding", "Yonder"],
-    "noun": ["Yield", "Yard", "Yoke"],
-    "description_template": "{adj} {noun} ek adaptive system element hai jo future potential ko represent karta hai."
-  },
-  {
-    "abbr": "Z",
-    "adj": ["Zen", "Zonal", "Zero"],
-    "noun": ["Zone", "Zip", "Z-Stack"],
-    "description_template": "{adj} {noun} orderly aur efficient technology ka ek part hai."
+  "prepositions": {
+    "A": ["Across", "Among"],
+    "B": ["Before", "Behind"],
+    "C": ["Concerning", "Considering"],
+    "D": ["During", "Despite"],
+    "E": ["Except", "Excluding"],
+    "F": ["For", "From"],
+    "G": ["Given"],
+    "I": ["In", "Inside", "Into"],
+    "O": ["Of", "On", "Over"],
+    "P": ["Per", "Past"],
+    "T": ["Through", "Throughout", "To"],
+    "U": ["Under", "Until", "Upon"],
+    "W": ["With", "Within", "Without"],
+    
+    "_default": ["of", "in", "for", "with"]
   }
-    ]
+}
