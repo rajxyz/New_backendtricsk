@@ -90,33 +90,51 @@ def get_tricks(
         return {"trick": "Invalid input."}
 
     if type == TrickType.abbreviations:
+        logger.debug("[ABBR] Starting abbreviation trick generation...")
         data = load_entities_abbr()
+        logger.debug(f"[ABBR] Loaded data: {data}")
 
         tricks = []
         descriptions = []
 
         for letter in input_parts:
+            logger.debug(f"[ABBR] Processing letter: {letter}")
+
             match = next(
                 (item for item in data if isinstance(item, dict) and item.get("abbr", "").upper() == letter),
                 None
             )
+
             if match:
-                adj = random.choice(match.get("adj", [])) if match.get("adj") else ""
-                noun = random.choice(match.get("noun", [])) if match.get("noun") else "???"
-                tricks.append(f"{letter} — {adj} {noun}".strip())
+                logger.debug(f"[ABBR] Match found for {letter}: {match}")
+                adj_list = match.get("adj", [])
+                noun_list = match.get("noun", [])
+
+                adj = random.choice(adj_list) if adj_list else ""
+                noun = random.choice(noun_list) if noun_list else "???"
+
+                trick_line = f"{letter} — {adj} {noun}".strip()
+                tricks.append(trick_line)
+                logger.debug(f"[ABBR] Trick generated: {trick_line}")
 
                 template = match.get("description_template")
                 if template:
                     try:
                         description = template.format(adj=adj, noun=noun)
                         descriptions.append(description)
+                        logger.debug(f"[ABBR] Description: {description}")
                     except Exception as e:
-                        logger.error(f"Error formatting description: {e}")
+                        logger.error(f"[ABBR] Error formatting description for {letter}: {e}")
             else:
+                logger.warning(f"[ABBR] No match found for letter: {letter}")
                 tricks.append(f"{letter} — ???")
 
         if all("???" in t for t in tricks):
+            logger.warning("[ABBR] All tricks are ??? — likely missing data.")
             return {"trick": random.choice(default_lines)}
+
+        logger.info(f"[ABBR] Final tricks: {tricks}")
+        logger.info(f"[ABBR] Final description: {' '.join(descriptions) if descriptions else 'None'}")
 
         return {
             "trick": ", ".join(tricks),
@@ -153,4 +171,3 @@ def get_tricks(
         }
 
     return {"trick": "Invalid trick type selected."}
-    
