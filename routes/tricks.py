@@ -39,28 +39,11 @@ TEMPLATE_FILE_MAP = {
 
 wordbank_cache = None
 
-def load_entities_abbr():
-    file_path = BASE_DIR / DATA_FILE_MAP["abbreviations"]
-    logger.debug(f"[ABBR] Loading from: {file_path}")
-    if not file_path.exists():
-        logger.warning(f"[ABBR] File not found: {file_path}")
-        return []
-
-    with file_path.open("r", encoding="utf-8") as f:
-        data = json.load(f)
-        if isinstance(data, dict):  # new format: keyed by letter
-            return [{"abbr": k, **v} for k, v in data.items() if isinstance(v, dict)]
-        elif isinstance(data, list):
-            return data
-        else:
-            logger.error("[ABBR] Unexpected data format in data.json")
-            return []
-
 def load_wordbank():
     file_path = BASE_DIR / DATA_FILE_MAP["logical_full_form"]
-    logger.debug(f"[WORDBANK] Loading from: {file_path}")
+    logger.debug(f"[LOGICAL] Loading from: {file_path}")
     if not file_path.exists():
-        logger.warning(f"[WORDBANK] File not found: {file_path}")
+        logger.warning(f"[LOGICAL] File not found: {file_path}")
         return {}
     with file_path.open("r", encoding="utf-8") as f:
         return json.load(f)
@@ -89,71 +72,8 @@ def get_tricks(
     if not input_parts:
         return {"trick": "Invalid input."}
 
-    if type == TrickType.abbreviations:
-        logger.debug("[ABBR] Starting abbreviation trick generation...")
-        data = load_entities_abbr()
-        logger.debug(f"[ABBR] Loaded data: {data}")
-
-        tricks = []
-        descriptions = []
-
-        for letter in input_parts:
-            logger.debug(f"[ABBR] Processing letter: {letter}")
-
-            match = next(
-                (item for item in data if isinstance(item, dict) and item.get("abbr", "").upper() == letter),
-                None
-            )
-
-            if match:
-                logger.debug(f"[ABBR] Match found for {letter}: {match}")
-                adj_list = match.get("adj", [])
-                noun_list = match.get("noun", [])
-
-                adj = random.choice(adj_list) if adj_list else ""
-                noun = random.choice(noun_list) if noun_list else "???"
-
-                trick_line = f"{letter} — {adj} {noun}".strip()
-                tricks.append(trick_line)
-                logger.debug(f"[ABBR] Trick generated: {trick_line}")
-
-                template = match.get("description_template")
-                if template:
-                    try:
-                        description = template.format(adj=adj, noun=noun)
-                        descriptions.append(description)
-                        logger.debug(f"[ABBR] Description: {description}")
-                    except Exception as e:
-                        logger.error(f"[ABBR] Error formatting description for {letter}: {e}")
-            else:
-                logger.warning(f"[ABBR] No match found for letter: {letter}")
-                tricks.append(f"{letter} — ???")
-
-        if all("???" in t for t in tricks):
-            logger.warning("[ABBR] All tricks are ??? — likely missing data.")
-            return {"trick": random.choice(default_lines)}
-
-        logger.info(f"[ABBR] Final tricks: {tricks}")
-        logger.info(f"[ABBR] Final description: {' '.join(descriptions) if descriptions else 'None'}")
-
-        return {
-            "trick": ", ".join(tricks),
-            "description": " ".join(descriptions) if descriptions else None
-        }
-
-    elif type == TrickType.simple_sentence:
-        if wordbank_cache is None:
-            wordbank_cache = load_wordbank()
-
-        templates = load_template_sentences(TEMPLATE_FILE_MAP["simple_sentence"])
-        if not templates:
-            return {"trick": "No templates found."}
-
-        template = random.choice(templates)
-        sentence = generate_template_sentence(template, wordbank_cache, input_parts)
-        return {"trick": sentence}
-
-    elif type == TrickType.logical_full_form:
+    # LOGICAL FULL FORM GENERATOR
+    if type == TrickType.logical_full_form:
         if len(input_parts) != 3:
             return {"trick": "Please provide exactly 3 letters."}
 
@@ -162,12 +82,16 @@ def get_tricks(
         preps = data.get("prepositions", {})
         default_preps = preps.get("_default", ["of", "in", "for"])
 
-        noun1 = random.choice(nouns.get(input_parts[0], [f"{input_parts[0]}-Object"]))
-        prep = random.choice(preps.get(input_parts[1], default_preps))
-        noun2 = random.choice(nouns.get(input_parts[2], [f"{input_parts[2]}-Concept"]))
+        letter1, letter2, letter3 = input_parts
 
+        noun1 = random.choice(nouns.get(letter1, [f"{letter1}-Thing"]))
+        prep = random.choice(preps.get(letter2, default_preps))
+        noun2 = random.choice(nouns.get(letter3, [f"{letter3}-Object"]))
+
+        logger.info(f"[LOGICAL] Selected: {noun1} {prep} {noun2}")
         return {
             "trick": f"{noun1} {prep} {noun2}"
         }
 
-    return {"trick": "Invalid trick type selected."}
+    # FALLBACK for other types (if needed)
+    return {"trick": "Only logical_full_form is supported in this version."}
