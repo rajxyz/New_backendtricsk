@@ -34,7 +34,7 @@ class TrickType(str, Enum):
 DATA_FILE_MAP = {
     "abbreviations": "data.json",
     "simple_sentence": "wordbank.json",
-    "logical_full_form": "wordbank.json"
+    "logical_full_form": "data.json"  # ✅ Logical full form uses data.json now
 }
 
 TEMPLATE_FILE_MAP = {
@@ -56,7 +56,7 @@ def load_entities_abbr():
 
 # Load wordbank data
 def load_wordbank():
-    file_path = BASE_DIR / DATA_FILE_MAP["simple_sentence"]
+    file_path = BASE_DIR / DATA_FILE_MAP["logical_full_form"]  # ✅ load correct file
     logger.debug(f"[WORDBANK] Loading from: {file_path}")
     if not file_path.exists():
         logger.warning(f"[WORDBANK] File not found: {file_path}")
@@ -99,9 +99,9 @@ def get_tricks(
         for letter in input_parts:
             match = next((item for item in data if item.get("abbr", "").upper() == letter), None)
             if match:
-                adj = random.choice(match.get("adj", []))
-                noun = random.choice(match.get("noun", []))
-                tricks.append(f"{letter} — {adj} {noun}")
+                adj = random.choice(match.get("adj", [])) if match.get("adj") else ""
+                noun = random.choice(match.get("noun", [])) if match.get("noun") else "???"
+                tricks.append(f"{letter} — {adj} {noun}".strip())
 
                 template = match.get("description_template")
                 if template:
@@ -139,7 +139,7 @@ def get_tricks(
         )
         return {"trick": sentence}
 
-    # --- LOGICAL FULL FORM (Noun + Preposition + Noun) ---
+    # --- LOGICAL FULL FORM ---
     elif type == TrickType.logical_full_form:
         if len(input_parts) != 3:
             return {"trick": "Please provide exactly 3 letters."}
@@ -149,9 +149,9 @@ def get_tricks(
         preps = wordbank.get("prepositions", {})
         default_preps = preps.get("_default", ["of", "in", "for"])
 
-        noun1 = random.choice(nouns.get(input_parts[0], ["?"]))
+        noun1 = random.choice(nouns.get(input_parts[0], [f"{input_parts[0]}-Object"]))
         prep = random.choice(preps.get(input_parts[1], default_preps))
-        noun2 = random.choice(nouns.get(input_parts[2], ["?"]))
+        noun2 = random.choice(nouns.get(input_parts[2], [f"{input_parts[2]}-Concept"]))
 
         return {
             "trick": f"{noun1} {prep} {noun2}"
