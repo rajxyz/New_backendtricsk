@@ -45,12 +45,16 @@ def load_entities_abbr():
     if not file_path.exists():
         logger.warning(f"[ABBR] File not found: {file_path}")
         return []
+
     with file_path.open("r", encoding="utf-8") as f:
         data = json.load(f)
-        if isinstance(data, dict):  # New format
+        if isinstance(data, dict):  # new format: keyed by letter
+            return [{"abbr": k, **v} for k, v in data.items() if isinstance(v, dict)]
+        elif isinstance(data, list):
             return data
-        return []  # fallback
-        
+        else:
+            logger.error("[ABBR] Unexpected data format in data.json")
+            return []
 
 def load_wordbank():
     file_path = BASE_DIR / DATA_FILE_MAP["logical_full_form"]
@@ -87,9 +91,6 @@ def get_tricks(
 
     if type == TrickType.abbreviations:
         data = load_entities_abbr()
-        if not isinstance(data, list):
-            logger.error("[ABBR] Data is not a list. Fix your data.json format.")
-            return {"trick": "Data format error."}
 
         tricks = []
         descriptions = []
@@ -152,3 +153,4 @@ def get_tricks(
         }
 
     return {"trick": "Invalid trick type selected."}
+    
