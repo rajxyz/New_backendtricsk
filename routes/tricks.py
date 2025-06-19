@@ -14,7 +14,6 @@ from .generate_template_sentence import (
 # Setup
 router = APIRouter()
 logger = logging.getLogger(__name__)
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Default fallback messages
@@ -29,11 +28,13 @@ default_lines = [
 class TrickType(str, Enum):
     abbreviations = "abbreviations"
     simple_sentence = "simple_sentence"
+    logical_full_form = "logical_full_form"
 
 # File mapping
 DATA_FILE_MAP = {
     "abbreviations": "data.json",
-    "simple_sentence": "wordbank.json"
+    "simple_sentence": "wordbank.json",
+    "logical_full_form": "wordbank.json"
 }
 
 TEMPLATE_FILE_MAP = {
@@ -63,7 +64,7 @@ def load_wordbank():
     with file_path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
-# Normalize input like "ltm", "l,t,m", "lotus torch mango"
+# Normalize input
 def extract_letters(input_str):
     if "," in input_str:
         parts = [p.strip().upper() for p in input_str.split(",") if p.strip()]
@@ -89,7 +90,7 @@ def get_tricks(
         logger.warning("[API] Empty input letters!")
         return {"trick": "Invalid input."}
 
-    # ---- ABBREVIATIONS ----
+    # --- ABBREVIATIONS ---
     if type == TrickType.abbreviations:
         data = load_entities_abbr()
         tricks = []
@@ -120,7 +121,7 @@ def get_tricks(
             "description": " ".join(descriptions) if descriptions else None
         }
 
-    # ---- SIMPLE SENTENCE ----
+    # --- SIMPLE SENTENCE ---
     elif type == TrickType.simple_sentence:
         if wordbank_cache is None:
             wordbank_cache = load_wordbank()
@@ -138,6 +139,24 @@ def get_tricks(
         )
         return {"trick": sentence}
 
-    # ---- INVALID TYPE ----
+    # --- LOGICAL FULL FORM (Noun + Preposition + Noun) ---
+    elif type == TrickType.logical_full_form:
+        if len(input_parts) != 3:
+            return {"trick": "Please provide exactly 3 letters."}
+
+        wordbank = load_wordbank()
+        nouns = wordbank.get("nouns", {})
+        preps = wordbank.get("prepositions", {})
+        default_preps = preps.get("_default", ["of", "in", "for"])
+
+        noun1 = random.choice(nouns.get(input_parts[0], ["?"]))
+        prep = random.choice(preps.get(input_parts[1], default_preps))
+        noun2 = random.choice(nouns.get(input_parts[2], ["?"]))
+
+        return {
+            "trick": f"{noun1} {prep} {noun2}"
+        }
+
+    # --- Invalid Type ---
     logger.warning("[API] Invalid trick type selected.")
     return {"trick": "Invalid trick type selected."}
