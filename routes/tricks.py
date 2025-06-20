@@ -14,6 +14,7 @@ from .generate_template_sentence import (
 # Setup
 router = APIRouter()
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -124,7 +125,7 @@ def get_tricks(
     logger.info(f"[API] Input Letters Raw: {letters}")
 
     input_parts = extract_letters(letters)
-    logger.debug(f"[API] Normalized Input: {input_parts}")
+    logger.debug(f"[API] Normalized Input Letters: {input_parts}")
 
     if not input_parts:
         logger.warning("[API] Empty input letters!")
@@ -164,6 +165,7 @@ def get_tricks(
             wordbank_cache = load_wordbank()
 
         input_length = len(input_parts)
+        logger.debug(f"[SENTENCE] Letter Count: {input_length}")
 
         custom_templates = (
             TEMPLATE_FILE_MAP["simple_sentence"]["custom_by_length"].get(input_length)
@@ -171,8 +173,10 @@ def get_tricks(
 
         if custom_templates and category in custom_templates:
             template_file = custom_templates[category]
+            logger.debug(f"[SENTENCE] Using custom template: {template_file}")
         else:
             template_file = TEMPLATE_FILE_MAP["simple_sentence"]["default"]
+            logger.debug(f"[SENTENCE] No custom template found. Using default: {template_file}")
 
         templates = load_template_sentences(template_file)
 
@@ -181,6 +185,7 @@ def get_tricks(
             return {"trick": "No templates found."}
 
         template = random.choice(templates)
+        logger.debug(f"[SENTENCE] Selected Template: {template}")
 
         sentence = generate_template_sentence(
             template,
