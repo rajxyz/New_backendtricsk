@@ -11,14 +11,10 @@ from .generate_template_sentence import (
     load_templates as load_template_sentences
 )
 
-# Setup
 router = APIRouter()
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Default fallback messages
 default_lines = [
     "Iska trick abhi update nahi hua.",
     "Agle version me iski baari aayegi.",
@@ -26,83 +22,30 @@ default_lines = [
     "Yeh abhi training me hai, ruk ja thoda!"
 ]
 
-# Trick Type Enum
 class TrickType(str, Enum):
+    generate_sentence = "generate_sentence"
     abbreviations = "abbreviations"
-    simple_sentence = "simple_sentence"
 
-# File mapping
 DATA_FILE_MAP = {
-    "abbreviations": "data.json",
-    "simple_sentence": "wordbank.json"
+    "generate_sentence": "wordbank.json",
+    "abbreviations": "data.json"
 }
 
 TEMPLATE_FILE_MAP = {
-    "simple_sentence": {
-        "default": "English_templates.json",
-        "custom_by_length": {
-            5: {
-                "actor": "templates_actor_5.json",
-                "animal": "templates_animal_5.json",
-                "cricketer": "templates_cricketer_5.json"
-            },
-            6: {
-                "actor": "templates_actor_6.json",
-                "animal": "templates_animal_6.json",
-                "cricketer": "templates_cricketer_6.json"
-            },
-            7: {
-                "actor": "templates_actor_7.json",
-                "animal": "templates_animal_7.json",
-                "cricketer": "templates_cricketer_7.json"
-            },
-            8: {
-                "actor": "templates_actor_8.json",
-                "animal": "templates_animal_8.json",
-                "cricketer": "templates_cricketer_8.json"
-            },
-            9: {
-                "actor": "templates_actor_9.json",
-                "animal": "templates_animal_9.json",
-                "cricketer": "templates_cricketer_9.json"
-            },
-            10: {
-                "actor": "templates_actor_10.json",
-                "animal": "templates_animal_10.json",
-                "cricketer": "templates_cricketer_10.json"
-            }
-        }
-    }
+    "generate_sentence": "English_templates.json"
 }
 
-# Cache
 wordbank_cache = None
 
-# Load abbreviation data
-def load_entities_abbr():
-    file_path = BASE_DIR / DATA_FILE_MAP["abbreviations"]
-    logger.debug(f"[ABBR] Loading from: {file_path}")
-
-    if not file_path.exists():
-        logger.warning(f"[ABBR] File not found: {file_path}")
-        return []
-
-    with file_path.open("r", encoding="utf-8") as f:
-        return json.load(f)
-
-# Load wordbank data
 def load_wordbank():
-    file_path = BASE_DIR / DATA_FILE_MAP["simple_sentence"]
-    logger.debug(f"[WORDBANK] Loading from: {file_path}")
-
+    file_path = BASE_DIR / DATA_FILE_MAP["abbreviations"]
+    logger.info(f"[LOAD] Loading wordbank from: {file_path}")
     if not file_path.exists():
-        logger.warning(f"[WORDBANK] File not found: {file_path}")
+        logger.warning(f"[LOAD] Wordbank file not found: {file_path}")
         return {}
-
     with file_path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
-# Normalize input like "ltm", "l,t,m", "lotus torch mango"
 def extract_letters(input_str):
     if "," in input_str:
         parts = [p.strip().upper() for p in input_str.split(",") if p.strip()]
@@ -110,90 +53,73 @@ def extract_letters(input_str):
         parts = list(input_str.strip().upper())
     else:
         parts = [w[0].upper() for w in re.findall(r'\b\w+', input_str)]
-
     return parts
 
 @router.get("/api/tricks")
 def get_tricks(
     type: TrickType = Query(..., description="Type of trick"),
-    letters: str = Query(..., description="Comma-separated letters or words"),
-    category: str = Query("actor", description="Choose from: actor, animal, cricketer")
+    letters: str = Query(..., description="Comma-separated letters or words")
 ):
     global wordbank_cache
-
     logger.info(f"[API] Trick Type: {type}")
     logger.info(f"[API] Input Letters Raw: {letters}")
 
     input_parts = extract_letters(letters)
-    logger.debug(f"[API] Normalized Input Letters: {input_parts}")
+    logger.debug(f"[API] Normalized Input: {input_parts}")
 
     if not input_parts:
-        logger.warning("[API] Empty input letters!")
         return {"trick": "Invalid input."}
 
-    # ---- ABBREVIATIONS ----
-    if type == TrickType.abbreviations:
-        data = load_entities_abbr()
-        tricks = []
-        descriptions = []
-
-        for letter in input_parts:
-            match = next(
-                (item for item in data if item.get("abbr", "").upper() == letter),
-                None
-            )
-
-            if match:
-                noun = random.choice(match["noun"])
-                template = match.get("description_template", "{noun} ek interesting concept hai.")
-                tricks.append(f"{letter} — {noun}")
-                descriptions.append(template.format(noun=noun))
-            else:
-                tricks.append(f"{letter} — ???")
-
-        if all("???" in t for t in tricks):
-            return {"trick": random.choice(default_lines)}
-
-        return {
-            "trick": ", ".join(tricks),
-            "description": " ".join(descriptions)
-        }
-
-    # ---- SIMPLE SENTENCE ----
-    elif type == TrickType.simple_sentence:
+    # 🔹 TYPE 1: generate_sentence
+    if type == TrickType.generate_sentence:
         if wordbank_cache is None:
             wordbank_cache = load_wordbank()
 
-        input_length = len(input_parts)
-        logger.debug(f"[SENTENCE] Letter Count: {input_length}")
-
-        custom_templates = (
-            TEMPLATE_FILE_MAP["simple_sentence"]["custom_by_length"].get(input_length)
-        )
-
-        if custom_templates and category in custom_templates:
-            template_file = custom_templates[category]
-            logger.debug(f"[SENTENCE] Using custom template: {template_file}")
-        else:
-            template_file = TEMPLATE_FILE_MAP["simple_sentence"]["default"]
-            logger.debug(f"[SENTENCE] No custom template found. Using default: {template_file}")
-
-        templates = load_template_sentences(template_file)
-
+        templates = load_template_sentences(TEMPLATE_FILE_MAP["generate_sentence"])
         if not templates:
-            logger.warning("[SENTENCE] No templates found.")
             return {"trick": "No templates found."}
 
         template = random.choice(templates)
-        logger.debug(f"[SENTENCE] Selected Template: {template}")
-
-        sentence = generate_template_sentence(
-            template,
-            wordbank_cache,
-            [l.upper() for l in input_parts]
-        )
-
+        sentence = generate_template_sentence(template, wordbank_cache, input_parts)
         return {"trick": sentence}
 
-    logger.warning("[API] Invalid trick type selected.")
+    # 🔹 TYPE 2: abbreviations → (noun + preposition + noun)
+    elif type == TrickType.abbreviations:
+        if len(input_parts) != 3:
+            logger.warning("[ABBR] Invalid input length, expected 3 letters.")
+            return {"trick": "Please provide exactly 3 letters."}
+
+        data = load_wordbank()
+        nouns = data.get("nouns", {})
+        preps = data.get("prepositions", {})
+        default_preps = preps.get("_default", ["of", "in", "for"])
+
+        letter1, letter2, letter3 = input_parts
+
+        logger.debug(f"[ABBR] Letters: {letter1}, {letter2}, {letter3}")
+        logger.debug(f"[ABBR] Checking nouns for '{letter1}' and '{letter3}', prepositions for '{letter2}'")
+
+        noun1 = random.choice(nouns.get(letter1, [])) if letter1 in nouns else None
+        prep = random.choice(preps.get(letter2, default_preps)) if letter2 in preps or "_default" in preps else None
+        noun2 = random.choice(nouns.get(letter3, [])) if letter3 in nouns else None
+
+        if not noun1:
+            logger.error(f"[ABBR] No noun found for letter '{letter1}'")
+            noun1 = f"{letter1}-Thing"
+
+        if not prep:
+            logger.error(f"[ABBR] No preposition found for letter '{letter2}', using fallback.")
+            prep = random.choice(default_preps)
+
+        if not noun2:
+            logger.error(f"[ABBR] No noun found for letter '{letter3}'")
+            noun2 = f"{letter3}-Object"
+
+        result = f"{noun1} {prep} {noun2}"
+        logger.info(f"[ABBR] Final full form: {result}")
+
+        return {
+            "trick": result
+        }
+
     return {"trick": "Invalid trick type selected."}
