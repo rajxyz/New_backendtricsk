@@ -11,13 +11,12 @@ from .generate_template_sentence import (
     load_templates as load_template_sentences
 )
 
-# Setup
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Default fallback messages
+# Fallback messages
 default_lines = [
     "Iska trick abhi update nahi hua.",
     "Agle version me iski baari aayegi.",
@@ -25,17 +24,16 @@ default_lines = [
     "Yeh abhi training me hai, ruk ja thoda!"
 ]
 
-# Trick Type Enum
+# Enum for trick types
 class TrickType(str, Enum):
     abbreviations = "abbreviations"
     generate_sentence = "generate_sentence"
 
-# File mapping
+# File mappings
 DATA_FILE_MAP = {
     "abbreviations": "data.json",
     "generate_sentence": "wordbank.json"
 }
-
 TEMPLATE_FILE_MAP = {
     "generate_sentence": "English_templates.json"
 }
@@ -43,9 +41,10 @@ TEMPLATE_FILE_MAP = {
 # Cache
 wordbank_cache = None
 
-# Load abbreviation data
+
+# === Load abbreviation data ===
 def load_entities_abbr():
-    file_path = BASE_DIR / DATA_FILE_MAP["abbreviations"]
+    file_path = BASE_DIR / "data" / DATA_FILE_MAP["abbreviations"]
     logger.debug(f"[ABBR] Loading from: {file_path}")
     if not file_path.exists():
         logger.warning(f"[ABBR] File not found: {file_path}")
@@ -53,9 +52,9 @@ def load_entities_abbr():
     with file_path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
-# Load wordbank data
+# === Load wordbank data ===
 def load_wordbank():
-    file_path = BASE_DIR / DATA_FILE_MAP["generate_sentence"]
+    file_path = BASE_DIR / "data" / DATA_FILE_MAP["generate_sentence"]
     logger.debug(f"[WORDBANK] Loading from: {file_path}")
     if not file_path.exists():
         logger.warning(f"[WORDBANK] File not found: {file_path}")
@@ -63,7 +62,7 @@ def load_wordbank():
     with file_path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
-# Normalize input like "ltm", "l,t,m", "lotus torch mango"
+# === Normalize input like "ltm", "l,t,m", or "lotus torch mango" ===
 def extract_letters(input_str):
     if "," in input_str:
         parts = [p.strip().upper() for p in input_str.split(",") if p.strip()]
@@ -73,12 +72,15 @@ def extract_letters(input_str):
         parts = [w[0].upper() for w in re.findall(r'\b\w+', input_str)]
     return parts
 
+
+# === Main API endpoint ===
 @router.get("/api/tricks")
 def get_tricks(
     type: TrickType = Query(..., description="Type of trick"),
     letters: str = Query(..., description="Comma-separated letters or words")
 ):
     global wordbank_cache
+
     logger.info(f"[API] Trick Type: {type}")
     logger.info(f"[API] Input Letters Raw: {letters}")
 
@@ -89,13 +91,16 @@ def get_tricks(
         logger.warning("[API] Empty input letters!")
         return {"trick": "Invalid input."}
 
-    # ---- ABBREVIATIONS ----
+    # --- ABBREVIATIONS ---
     if type == TrickType.abbreviations:
         data = load_entities_abbr()
         tricks = []
 
         for letter in input_parts:
-            match = next((item for item in data if item.get("abbr", "").upper().startswith(letter)), None)
+            match = next(
+                (item for item in data if item.get("abbr", "").upper().startswith(letter)),
+                None
+            )
             if match:
                 tricks.append(f"{letter} — {match.get('expansion', '???')}")
             else:
@@ -104,14 +109,18 @@ def get_tricks(
         if all("???" in t for t in tricks):
             return {"trick": random.choice(default_lines)}
 
-        descriptions = [item.get("description", "") for item in data if item.get("abbr", "").upper().startswith(tuple(input_parts))]
+        descriptions = [
+            item.get("description", "")
+            for item in data
+            if item.get("abbr", "").upper().startswith(tuple(input_parts))
+        ]
 
         return {
             "trick": ", ".join(tricks),
             "description": " ".join(descriptions) if descriptions else None
         }
 
-    # ---- GENERATE SENTENCE ----
+    # --- GENERATE SENTENCE ---
     elif type == TrickType.generate_sentence:
         if wordbank_cache is None:
             wordbank_cache = load_wordbank()
@@ -129,6 +138,6 @@ def get_tricks(
         )
         return {"trick": sentence}
 
-    # ---- INVALID TYPE ----
+    # --- INVALID TYPE ---
     logger.warning("[API] Invalid trick type selected.")
     return {"trick": "Invalid trick type selected."}
