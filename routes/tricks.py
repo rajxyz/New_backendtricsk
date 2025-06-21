@@ -28,16 +28,16 @@ default_lines = [
 # Trick Type Enum
 class TrickType(str, Enum):
     abbreviations = "abbreviations"
-    simple_sentence = "simple_sentence"
+    generate_sentence = "generate_sentence"
 
 # File mapping
 DATA_FILE_MAP = {
     "abbreviations": "data.json",
-    "simple_sentence": "wordbank.json"
+    "generate_sentence": "wordbank.json"
 }
 
 TEMPLATE_FILE_MAP = {
-    "simple_sentence": "English_templates.json"
+    "generate_sentence": "English_templates.json"
 }
 
 # Cache
@@ -55,7 +55,7 @@ def load_entities_abbr():
 
 # Load wordbank data
 def load_wordbank():
-    file_path = BASE_DIR / DATA_FILE_MAP["simple_sentence"]
+    file_path = BASE_DIR / DATA_FILE_MAP["generate_sentence"]
     logger.debug(f"[WORDBANK] Loading from: {file_path}")
     if not file_path.exists():
         logger.warning(f"[WORDBANK] File not found: {file_path}")
@@ -93,39 +93,30 @@ def get_tricks(
     if type == TrickType.abbreviations:
         data = load_entities_abbr()
         tricks = []
-        descriptions = []
 
         for letter in input_parts:
-            match = next((item for item in data if item.get("abbr", "").upper() == letter), None)
+            match = next((item for item in data if item.get("abbr", "").upper().startswith(letter)), None)
             if match:
-                adj = random.choice(match.get("adj", []))
-                noun = random.choice(match.get("noun", []))
-                tricks.append(f"{letter} — {adj} {noun}")
-
-                template = match.get("description_template")
-                if template:
-                    try:
-                        description = template.format(adj=adj, noun=noun)
-                        descriptions.append(description)
-                    except Exception as e:
-                        logger.error(f"Error formatting description: {e}")
+                tricks.append(f"{letter} — {match.get('expansion', '???')}")
             else:
                 tricks.append(f"{letter} — ???")
 
         if all("???" in t for t in tricks):
             return {"trick": random.choice(default_lines)}
 
+        descriptions = [item.get("description", "") for item in data if item.get("abbr", "").upper().startswith(tuple(input_parts))]
+
         return {
             "trick": ", ".join(tricks),
             "description": " ".join(descriptions) if descriptions else None
         }
 
-    # ---- SIMPLE SENTENCE ----
-    elif type == TrickType.simple_sentence:
+    # ---- GENERATE SENTENCE ----
+    elif type == TrickType.generate_sentence:
         if wordbank_cache is None:
             wordbank_cache = load_wordbank()
 
-        templates = load_template_sentences(TEMPLATE_FILE_MAP["simple_sentence"])
+        templates = load_template_sentences(TEMPLATE_FILE_MAP["generate_sentence"])
         if not templates:
             logger.warning("[SENTENCE] No templates found.")
             return {"trick": "No templates found."}
@@ -141,4 +132,3 @@ def get_tricks(
     # ---- INVALID TYPE ----
     logger.warning("[API] Invalid trick type selected.")
     return {"trick": "Invalid trick type selected."}
-                 
