@@ -2,3 +2,4 @@ fastapi
 uvicorn
 inflect
 wikipedia
+gingerit
