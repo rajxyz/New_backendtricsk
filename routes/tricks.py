@@ -5,7 +5,7 @@ import re
 from fastapi import APIRouter, Query
 from pathlib import Path
 from enum import Enum
-from gingerit.gingerit import GingerIt
+from gingerit import GingerIt
 
 from .generate_template_sentence import generate_template_sentence, load_templates
 
