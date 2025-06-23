@@ -1,139 +1,120 @@
-import json  
-import random  
-import logging  
-import re  
-import requests
-from fastapi import APIRouter, Query  
-from pathlib import Path  
-from enum import Enum  
-  
-from .generate_template_sentence import generate_template_sentence, load_templates  
-  
-# Setup  
-router = APIRouter()  
-logger = logging.getLogger(__name__)  
-  
-BASE_DIR = Path(__file__).resolve().parent.parent  
-  
-default_lines = [  
-    "Iska trick abhi update nahi hua.",  
-    "Agle version me iski baari aayegi.",  
-    "Filhal kuch khaas nahi bola ja sakta.",  
-    "Yeh abhi training me hai, ruk ja thoda!"  
-]  
-  
-class TrickType(str, Enum):  
-    abbreviations = "abbreviations"  
-    generate_sentence = "generate_sentence"  
-  
-DATA_FILE_MAP = {  
-    "abbreviations": "data.json",  
-    "generate_sentence": "wordbank.json"  
-}  
-  
-TEMPLATE_FILE_MAP = {  
-    "generate_sentence": "English_templates.json"  
-}  
-  
-wordbank_cache = None  
-  
-def load_json(file_key):  
-    file_path = BASE_DIR / DATA_FILE_MAP[file_key]  
-    if not file_path.exists():  
-        logger.warning(f"[{file_key.upper()}] File not found: {file_path}")  
-        return {}  
-    with file_path.open("r", encoding="utf-8") as f:  
-        return json.load(f)  
-  
-def extract_letters(input_str):  
-    if "," in input_str:  
-        parts = [p.strip().upper() for p in input_str.split(",") if p.strip()]  
-    elif re.match(r"^[a-zA-Z]+$", input_str.strip()):  
-        parts = list(input_str.strip().upper())  
-    else:  
-        parts = [w[0].upper() for w in re.findall(r'\b\w+', input_str)]  
-    return parts  
-  
-def correct_grammar_online(text: str) -> str:
-    try:
-        response = requests.post(
-            "https://api.languagetoolplus.com/v2/check",
-            data={
-                "text": text,
-                "language": "en-US"
-            },
-            headers={
-                "Content-Type": "application/x-www-form-urlencoded"
-            }
-        )
-        result = response.json()
-        for match in reversed(result.get("matches", [])):
-            replacements = match.get("replacements", [])
-            if replacements:
-                replacement = replacements[0]["value"]
-                offset = match["offset"]
-                length = match["length"]
-                text = text[:offset] + replacement + text[offset + length:]
-        return text
-    except Exception as e:
-        return text  # fallback if API fails
-  
-@router.get("/api/tricks")  
-def get_tricks(  
-    type: TrickType = Query(..., description="Type of trick"),  
-    letters: str = Query(..., description="Comma-separated letters or words")  
-):  
-    global wordbank_cache  
-    logger.info(f"[API] Trick Type: {type}")  
-    logger.info(f"[API] Input Letters Raw: {letters}")  
-  
-    input_parts = extract_letters(letters)  
-    logger.debug(f"[API] Normalized Input: {input_parts}")  
-  
-    if not input_parts:  
-        return {"trick": "Invalid input."}  
-  
-    # --- ABBREVIATIONS ---  
-    if type == TrickType.abbreviations:  
-        data = load_json("abbreviations")  
-        nouns = data.get("nouns", {})  
-        preps = data.get("prepositions", {})  
-        trick_words = []  
-  
-        for i, letter in enumerate(input_parts):  
-            if i % 2 == 1:  # Preposition  
-                word_list = preps.get(letter, []) or preps.get("_default", [])  
-            else:  # Noun  
-                word_list = nouns.get(letter, [])  
-  
-            if word_list:  
-                trick_words.append(random.choice(word_list))  
-            else:  
-                trick_words.append("???")  
-  
-        trick = " ".join(trick_words)  
-  
-        if "???" in trick:  
-            return {"trick": random.choice(default_lines)}  
-        return {"trick": trick}  
-  
-    # --- GENERATE SENTENCE ---  
-    elif type == TrickType.generate_sentence:  
-        if wordbank_cache is None:  
-            wordbank_cache = load_json("generate_sentence")  
-  
-        templates = load_templates(TEMPLATE_FILE_MAP["generate_sentence"])  
-        if not templates:  
-            return {"trick": "No templates found."}  
-  
-        template = random.choice(templates)  
-        sentence = generate_template_sentence(  
-            template,  
-            wordbank_cache,  
-            input_parts  
-        )
+import json
+import random
+import inflect
+from pathlib import Path
 
-        corrected = correct_grammar_online(sentence)
-        return {"trick": corrected}  
-  
-    return {"trick": "Invalid trick type selected."}
+p = inflect.engine()
+BASE_DIR = Path(__file__).resolve().parent
+
+def load_wordbank(filename="wordbank.json") -> dict:
+    path = BASE_DIR / filename
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def load_templates(filename="English-templates.json") -> list:
+    path = BASE_DIR / filename
+    with open(path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return data.get("TEMPLATES", [])
+
+def extract_placeholders(template: str) -> list:
+    placeholders = []
+
+    # Detect [placeholder]
+    start = 0
+    while True:
+        start = template.find('[', start)
+        if start == -1:
+            break
+        end = template.find(']', start)
+        if end == -1:
+            break
+        placeholders.append(template[start+1:end])
+        start = end + 1
+
+    # Detect {placeholder}
+    start = 0
+    while True:
+        start = template.find('{', start)
+        if start == -1:
+            break
+        end = template.find('}', start)
+        if end == -1:
+            break
+        placeholders.append(template[start+1:end])
+        start = end + 1
+
+    return placeholders
+
+def generate_template_sentence(template: str, wordbank: dict, input_letters: list) -> str:
+    print("\n--- DEBUGGING TEMPLATE GENERATION ---")
+    print(f"Original template: {template}")
+    print(f"Input letters: {input_letters}")
+
+    placeholders = extract_placeholders(template)
+    print(f"Detected placeholders: {placeholders}")
+
+    normalized_wordbank = {k.lower(): v for k, v in wordbank.items()}
+
+    used_letters = set()
+
+    for ph in placeholders:
+        plural = False
+        base_ph = ph
+
+        if base_ph.endswith('s') and base_ph[:-1] in ['noun', 'verb', 'adjective', 'adverb']:
+            plural = True
+            base_ph = base_ph[:-1]
+
+        base_key = base_ph.lower()
+        plural_key = base_key + 's'
+
+        if plural_key in normalized_wordbank:
+            lookup_key = plural_key
+        elif base_key in normalized_wordbank:
+            lookup_key = base_key
+        else:
+            lookup_key = None
+
+        print(f"\nHandling placeholder: {ph}")
+        print(f"Base placeholder: {base_ph}")
+        print(f"Plural: {plural}")
+        print(f"Looking in wordbank key: {lookup_key}")
+
+        selected_word = None
+
+        if lookup_key:
+            for letter in input_letters:
+                if letter in used_letters:
+                    continue
+
+                letter_upper = letter.upper()
+                letter_lower = letter.lower()
+
+                matched = normalized_wordbank[lookup_key].get(letter_upper) or normalized_wordbank[lookup_key].get(letter_lower) or []
+                if matched:
+                    selected_word = random.choice(matched)
+                    used_letters.add(letter)
+                    print(f"[✔️] Selected word '{selected_word}' for letter '{letter}'")
+                    break
+
+        fallback_words = {
+            "adverb": ["fast", "well", "soon", "boldly", "kindly"],
+            "preposition": ["with", "without", "under", "over"],
+            "noun": ["thing", "idea", "item", "goal"],
+            "verb": ["go", "run", "do", "make"],
+            "adjective": ["cool", "big", "smart", "fun"]
+        }
+
+        if not selected_word:
+            selected_word = random.choice(fallback_words.get(base_ph, [f"<{ph}>"]))
+            print(f"[❌] Using fallback word: {selected_word}")
+
+        if plural:
+            selected_word = p.plural(selected_word)
+
+        template = template.replace(f"[{ph}]", selected_word, 1)
+        template = template.replace(f"{{{ph}}}", selected_word, 1)
+
+    print(f"✅ Final sentence: {template}")
+    return template
