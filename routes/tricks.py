@@ -11,6 +11,7 @@ from .generate_template_sentence import generate_template_sentence, load_templat
 # Setup  
 router = APIRouter()  
 logger = logging.getLogger(__name__)  
+logging.basicConfig(level=logging.DEBUG)  # Ensure debug logs are shown  
   
 BASE_DIR = Path(__file__).resolve().parent.parent  
   
@@ -30,7 +31,6 @@ DATA_FILE_MAP = {
     "generate_sentence": "wordbank.json"  
 }  
   
-# Updated path to include the 'routes' folder  
 TEMPLATE_FILE_MAP = {  
     "generate_sentence": "routes/English_templates.json"  
 }  
@@ -107,6 +107,7 @@ def get_tricks(
     elif type == TrickType.generate_sentence:  
         if wordbank_cache is None:  
             wordbank_cache = load_json("generate_sentence")  
+            logger.debug(f"[LOADED WORD BANK] Categories: {list(wordbank_cache.keys())}")  
   
         template_data = load_template_json()  
         letter_count = str(len(input_parts))  
@@ -118,7 +119,6 @@ def get_tricks(
             logger.warning(f"[DEBUG] No templates found for length: {letter_count}")  
             return {"trick": "No matching templates for this input length."}  
   
-        # Try multiple templates to find a match using all letters  
         max_attempts = 10  
         for attempt in range(max_attempts):  
             template = random.choice(matching_templates)  
@@ -137,13 +137,22 @@ def get_tricks(
   
             for placeholder, letter in zip(placeholders, input_parts):  
                 base = placeholder.rstrip("s")  
-                options = wordbank_cache.get(base + "s", {})  
-                word_list = options.get(letter.upper(), [])  
+                category = base + "s"  
   
-                logger.debug(f"[DEBUG] Looking for placeholder '{placeholder}' with letter '{letter}' in category '{base}s'")  
+                if category not in wordbank_cache:  
+                    logger.error(f"[ERROR] Category '{category}' not found in wordbank.")  
+                    success = False  
+                    break  
+  
+                options = wordbank_cache.get(category, {})  
+                available_letters = list(options.keys())  
+                logger.debug(f"[DEBUG] '{category}' category has letters: {available_letters}")  
+  
+                word_list = options.get(letter.upper(), [])  
+                logger.debug(f"[DEBUG] Trying '{category}' -> '{letter.upper()}': {word_list}")  
   
                 if not word_list:  
-                    logger.warning(f"[WARNING] No match for placeholder '{placeholder}' and letter '{letter}'")  
+                    logger.warning(f"[WARNING] No match for placeholder '{placeholder}' and letter '{letter}' in category '{category}'")  
                     success = False  
                     break  
   
