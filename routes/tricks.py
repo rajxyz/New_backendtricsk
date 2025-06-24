@@ -5,10 +5,8 @@ import re
 from fastapi import APIRouter, Query
 from pathlib import Path
 from enum import Enum
-from gingerit import GingerIt
 
-# ✅ UPDATED: added choose_matching_template
-from .generate_template_sentence import generate_template_sentence, load_templates, choose_matching_template
+from .generate_template_sentence import generate_template_sentence, load_templates
 
 # Setup
 router = APIRouter()
@@ -37,8 +35,6 @@ TEMPLATE_FILE_MAP = {
 }
 
 wordbank_cache = None
-grammar_parser = GingerIt()
-
 
 def load_json(file_key):
     file_path = BASE_DIR / DATA_FILE_MAP[file_key]
@@ -108,20 +104,14 @@ def get_tricks(
         if not templates:
             return {"trick": "No templates found."}
 
-        # ✅ CHANGED: Use matching template
-        template = choose_matching_template(templates, input_parts)
+        template = random.choice(templates)
         logger.info(f"[DEBUG] Selected Template: {template}")
 
         sentence = generate_template_sentence(template, wordbank_cache, input_parts)
         logger.info(f"[DEBUG] Raw Sentence: {sentence}")
 
-        # Grammar correction
-        try:
-            corrected = grammar_parser.parse(sentence)['result']
-            logger.info(f"[DEBUG] Corrected Sentence: {corrected}")
-        except Exception as e:
-            logger.warning(f"[GingerIt] Grammar correction failed: {e}")
-            corrected = sentence
+        # Grammar correction skipped
+        corrected = sentence
 
         return {"trick": corrected}
 
