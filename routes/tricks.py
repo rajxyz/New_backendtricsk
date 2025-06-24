@@ -7,7 +7,8 @@ from pathlib import Path
 from enum import Enum
 from gingerit import GingerIt
 
-from .generate_template_sentence import generate_template_sentence, load_templates
+# ✅ UPDATED: added choose_matching_template
+from .generate_template_sentence import generate_template_sentence, load_templates, choose_matching_template
 
 # Setup
 router = APIRouter()
@@ -107,7 +108,8 @@ def get_tricks(
         if not templates:
             return {"trick": "No templates found."}
 
-        template = random.choice(templates)
+        # ✅ CHANGED: Use matching template
+        template = choose_matching_template(templates, input_parts)
         logger.info(f"[DEBUG] Selected Template: {template}")
 
         sentence = generate_template_sentence(template, wordbank_cache, input_parts)
