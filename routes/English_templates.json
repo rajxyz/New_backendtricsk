@@ -1,24 +1,66 @@
-{
-  "TEMPLATES": [
-    "The {adjective} {noun} {verb}s.",
-    "{article} {adjective} {noun} {verb}s.",
-    "{noun} {verb}s {adverb}.",
-    "{article} {noun} can {verb}.",
-    "{noun} must {verb} {adverb}.",
-    "A {adjective} {noun} will {verb}.",
-    "{noun} usually {verb}s {adverb}.",
-    "{article} {noun} {verb}s the {noun}.",
-    "The {noun} {verb}s the {adjective} {noun}.",
-    "{adjective} {noun}s {verb} well.",
-    "{noun} can always {verb} {adverb}.",
-    "{article} {adjective} {noun} should {verb}.",
-    "Sometimes, the {noun} {verb}s fast.",
-    "The {adjective} {noun} likes to {verb}.",
-    "Even {noun}s {verb} {adverb}.",
-    "Without {noun}, we cannot {verb}.",
-    "{noun} {verb}s like a {adjective} {noun}.",
-    "Each {noun} can {verb} easily.",
-    "The {noun} starts to {verb} slowly.",
-    "One {noun} might {verb} today."
-  ]
-    }
+   "TEMPLATES_BY_LENGTH": {
+    "2": [
+      "{noun} {verb}s.",
+      "The {noun} {verb}s.",
+      "{adjective} {noun}s.",
+      "{noun} can {verb}.",
+      "{article} {noun} {verb}s."
+    ],
+    "3": [
+      "{article} {adjective} {noun} {verb}s.",
+      "{noun} {verb}s {adverb}.",
+      "{adjective} {noun} will {verb}.",
+      "{noun} can always {verb} {adverb}.",
+      "The {adjective} {noun} likes to {verb}."
+    ],
+    "4": [
+      "The {adjective} {noun} {verb}s {adverb}.",
+      "{noun} must {verb} the {noun}.",
+      "Sometimes, the {noun} {verb}s {adverb}.",
+      "Each {noun} can {verb} {adverb}.",
+      "{noun} {verb}s like a {adjective} {noun}."
+    ],
+    "5": [
+      "{article} {adjective} {noun} should {verb} {adverb}.",
+      "The {adjective} {noun} starts to {verb} {adverb}.",
+      "Without {noun}, the {adjective} {noun} {verb}s.",
+      "{article} {noun} that {verb}s is very {adjective}.",
+      "One {noun} might {verb} the {adjective} {noun}."
+    ],
+    "6": [
+      "The {adjective} {noun} {verb}s the {adjective} {noun} {adverb}.",
+      "Sometimes, the {adjective} {noun} {verb}s {adverb} while working.",
+      "{noun}s prefer to {verb} when it's {adjective} and {adjective}.",
+      "{article} {noun} was made to {verb} very {adverb}.",
+      "{noun} can {verb} like a {adjective} {noun} {adverb}."
+    ],
+    "7": [
+      "After the {adjective} {noun}, {noun} must {verb} {adverb} again.",
+      "{article} {adjective} {noun} who {verb}s {adverb} is smart.",
+      "{noun} {verb}s the {adjective} {noun} very {adverb}.",
+      "{article} {noun} and {article} {noun} both {verb} now.",
+      "When the {noun} {verb}s, {noun}s {verb} back {adverb}."
+    ],
+    "8": [
+      "Because the {noun} {verb}s the {noun}, we {verb} {adverb}.",
+      "Every {adjective} {noun} can {verb} the {adjective} {noun}.",
+      "The {noun} {verb}s the {noun} like a {adjective} {noun}.",
+      "{article} {noun}, {article} {adjective} {noun}, and {noun} {verb}.",
+      "{adjective} {noun}s that {verb} always {verb} {adverb}."
+    ],
+    "9": [
+      "Despite the {noun}, {noun}s must {verb} the {noun} {adverb}.",
+      "{adjective} {noun}s {verb} {adverb} when the {noun} is near.",
+      "{noun}s that {verb} like {noun}s are often {adjective}.",
+      "After {noun}s {verb}, the {noun} still {verb}s {adverb}.",
+      "{noun} and {noun} {verb} the {adjective} {noun} {adverb}."
+    ],
+    "10": [
+      "The {adjective} {noun} that {verb}s like {adjective} {noun}s always {verb} {adverb}.",
+      "When {noun}s {verb} {adverb}, the {adjective} {noun} starts to {verb}.",
+      "Even though the {noun} {verb}s, {noun}s can {verb} {adverb}.",
+      "{article} {adjective} {noun} with {adjective} {noun}s {verb}s {adverb}.",
+      "{noun}s {verb} the {noun} as the {adjective} {noun} {verb}s back."
+    ]
+  }
+}
