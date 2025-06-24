@@ -115,40 +115,53 @@ def get_tricks(
         matching_templates = template_data.get(letter_count, [])  
   
         if not matching_templates:  
+            logger.warning(f"[DEBUG] No templates found for length: {letter_count}")  
             return {"trick": "No matching templates for this input length."}  
   
-        # Try until all input letters are used once
+        # Try multiple templates to find a match using all letters  
         max_attempts = 10  
         for attempt in range(max_attempts):  
             template = random.choice(matching_templates)  
-            logger.info(f"[DEBUG] Trying Template: {template}")  
+            logger.info(f"[DEBUG] Attempt {attempt+1}: Trying Template: {template}")  
   
             placeholders = re.findall(r"\{(\w+)\}", template)  
+            logger.info(f"[DEBUG] Detected Placeholders: {placeholders}")  
+  
             if len(placeholders) != len(input_parts):  
-                continue  # try another if count mismatch  
+                logger.info(f"[DEBUG] Skipping template due to placeholder count mismatch.")  
+                continue  
   
             used_letters = []  
             words = {}  
             success = True  
   
             for placeholder, letter in zip(placeholders, input_parts):  
-                category = placeholder.rstrip("s")  
-                options = wordbank_cache.get(category + "s", {})  
+                base = placeholder.rstrip("s")  
+                options = wordbank_cache.get(base + "s", {})  
                 word_list = options.get(letter.upper(), [])  
+  
+                logger.debug(f"[DEBUG] Looking for placeholder '{placeholder}' with letter '{letter}' in category '{base}s'")  
+  
                 if not word_list:  
+                    logger.warning(f"[WARNING] No match for placeholder '{placeholder}' and letter '{letter}'")  
                     success = False  
                     break  
-                words[placeholder] = random.choice(word_list)  
+  
+                selected_word = random.choice(word_list)  
+                words[placeholder] = selected_word  
                 used_letters.append(letter)  
   
+                logger.info(f"[✔️] Selected '{selected_word}' for placeholder '{placeholder}' and letter '{letter}'")  
+  
             if success:  
-                # Replace placeholders  
                 final_sentence = template  
                 for key, val in words.items():  
                     final_sentence = final_sentence.replace(f"{{{key}}}", val, 1)  
-                logger.info(f"[DEBUG] Final Sentence: {final_sentence}")  
+  
+                logger.info(f"[✅] Final sentence: {final_sentence}")  
                 return {"trick": final_sentence}  
   
+        logger.error(f"[❌] All {max_attempts} attempts failed to generate sentence using all letters.")  
         return {"trick": "Couldn't generate a sentence using all letters."}  
   
     return {"trick": "Invalid trick type selected."}
