@@ -46,6 +46,19 @@ def extract_placeholders(template: str) -> list:
 
     return placeholders
 
+# ✅ NEW: Match templates with correct number of placeholders
+def choose_matching_template(templates: list, input_letters: list) -> str:
+    matching_templates = []
+    for temp in templates:
+        placeholders = extract_placeholders(temp)
+        if len(placeholders) == len(input_letters):
+            matching_templates.append(temp)
+
+    if matching_templates:
+        return random.choice(matching_templates)
+    else:
+        return random.choice(templates)  # fallback
+
 def generate_template_sentence(template: str, wordbank: dict, input_letters: list) -> str:
     print("\n--- DEBUGGING TEMPLATE GENERATION ---")
     print(f"Original template: {template}")
@@ -55,7 +68,6 @@ def generate_template_sentence(template: str, wordbank: dict, input_letters: lis
     print(f"Detected placeholders: {placeholders}")
 
     normalized_wordbank = {k.lower(): v for k, v in wordbank.items()}
-
     used_letters = set()
 
     for ph in placeholders:
