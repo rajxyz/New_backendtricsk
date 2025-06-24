@@ -44,6 +44,14 @@ def load_json(file_key):
     with file_path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
+def load_template_json():
+    file_path = BASE_DIR / TEMPLATE_FILE_MAP["generate_sentence"]
+    if not file_path.exists():
+        logger.warning(f"[TEMPLATES] File not found: {file_path}")
+        return {}
+    with file_path.open("r", encoding="utf-8") as f:
+        return json.load(f).get("TEMPLATES_BY_LENGTH", {})
+
 def extract_letters(input_str):
     if "," in input_str:
         parts = [p.strip().upper() for p in input_str.split(",") if p.strip()]
@@ -76,9 +84,9 @@ def get_tricks(
         trick_words = []
 
         for i, letter in enumerate(input_parts):
-            if i % 2 == 1:  # Preposition
+            if i % 2 == 1:
                 word_list = preps.get(letter, []) or preps.get("_default", [])
-            else:  # Noun
+            else:
                 word_list = nouns.get(letter, [])
 
             if word_list:
@@ -99,16 +107,11 @@ def get_tricks(
         if wordbank_cache is None:
             wordbank_cache = load_json("generate_sentence")
 
-        templates = load_templates(TEMPLATE_FILE_MAP["generate_sentence"])
-        if not templates:
-            return {"trick": "No templates found."}
+        template_data = load_template_json()
+        letter_count = str(len(input_parts))
+        logger.info(f"[DEBUG] Template length group: {letter_count}")
 
-        # Filter templates with matching number of placeholders
-        matching_templates = []
-        for tpl in templates:
-            placeholders = re.findall(r"\{(.*?)\}", tpl)
-            if len(placeholders) == len(input_parts):
-                matching_templates.append(tpl)
+        matching_templates = template_data.get(letter_count, [])
 
         if not matching_templates:
             return {"trick": "No matching templates for this input length."}
@@ -119,10 +122,6 @@ def get_tricks(
         sentence = generate_template_sentence(template, wordbank_cache, input_parts)
         logger.info(f"[DEBUG] Raw Sentence: {sentence}")
 
-        # Skip grammar correction (GingerIt removed due to import error)
-        corrected = sentence
-
-        return {"trick": corrected}
+        return {"trick": sentence}
 
     return {"trick": "Invalid trick type selected."}
-        
