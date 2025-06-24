@@ -1,4 +1,5 @@
-   "TEMPLATES_BY_LENGTH": {
+{
+  "TEMPLATES_BY_LENGTH": {
     "2": [
       "{noun} {verb}s.",
       "The {noun} {verb}s.",
@@ -63,3 +64,4 @@
       "{noun}s {verb} the {noun} as the {adjective} {noun} {verb}s back."
     ]
   }
+}
