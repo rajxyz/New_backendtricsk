@@ -53,7 +53,6 @@ def extract_letters(input_str):
         parts = [w[0].upper() for w in re.findall(r'\b\w+', input_str)]
     return parts
 
-
 @router.get("/api/tricks")
 def get_tricks(
     type: TrickType = Query(..., description="Type of trick"),
@@ -104,15 +103,26 @@ def get_tricks(
         if not templates:
             return {"trick": "No templates found."}
 
-        template = random.choice(templates)
+        # Filter templates with matching number of placeholders
+        matching_templates = []
+        for tpl in templates:
+            placeholders = re.findall(r"\{(.*?)\}", tpl)
+            if len(placeholders) == len(input_parts):
+                matching_templates.append(tpl)
+
+        if not matching_templates:
+            return {"trick": "No matching templates for this input length."}
+
+        template = random.choice(matching_templates)
         logger.info(f"[DEBUG] Selected Template: {template}")
 
         sentence = generate_template_sentence(template, wordbank_cache, input_parts)
         logger.info(f"[DEBUG] Raw Sentence: {sentence}")
 
-        # Grammar correction skipped
+        # Skip grammar correction (GingerIt removed due to import error)
         corrected = sentence
 
         return {"trick": corrected}
 
     return {"trick": "Invalid trick type selected."}
+        
