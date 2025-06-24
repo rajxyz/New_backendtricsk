@@ -30,8 +30,9 @@ DATA_FILE_MAP = {
     "generate_sentence": "wordbank.json"
 }
 
+# Updated path to include the 'routes' folder
 TEMPLATE_FILE_MAP = {
-    "generate_sentence": "English_templates.json"
+    "generate_sentence": "routes/English_templates.json"
 }
 
 wordbank_cache = None
