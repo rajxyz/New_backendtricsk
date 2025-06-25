@@ -11,7 +11,6 @@ from .generate_template_sentence import generate_template_sentence, load_templat
 # Setup  
 router = APIRouter()  
 logger = logging.getLogger(__name__)  
-logging.basicConfig(level=logging.DEBUG)  # Ensure debug logs are shown  
   
 BASE_DIR = Path(__file__).resolve().parent.parent  
   
@@ -43,7 +42,16 @@ def load_json(file_key):
         logger.warning(f"[{file_key.upper()}] File not found: {file_path}")  
         return {}  
     with file_path.open("r", encoding="utf-8") as f:  
-        return json.load(f)  
+        raw_data = json.load(f)  
+  
+        # Normalize category keys to lowercase  
+        normalized_data = {}  
+        for key, value in raw_data.items():  
+            if isinstance(value, dict):  
+                normalized_data[key.lower()] = {k.upper(): v for k, v in value.items()}  
+            else:  
+                normalized_data[key.lower()] = value  
+        return normalized_data  
   
 def load_template_json():  
     file_path = BASE_DIR / TEMPLATE_FILE_MAP["generate_sentence"]  
@@ -77,7 +85,6 @@ def get_tricks(
     if not input_parts:  
         return {"trick": "Invalid input."}  
   
-    # --- ABBREVIATIONS ---  
     if type == TrickType.abbreviations:  
         data = load_json("abbreviations")  
         nouns = data.get("nouns", {})  
@@ -103,7 +110,6 @@ def get_tricks(
             return {"trick": random.choice(default_lines)}  
         return {"trick": trick}  
   
-    # --- GENERATE SENTENCE ---  
     elif type == TrickType.generate_sentence:  
         if wordbank_cache is None:  
             wordbank_cache = load_json("generate_sentence")  
@@ -136,23 +142,20 @@ def get_tricks(
             success = True  
   
             for placeholder, letter in zip(placeholders, input_parts):  
-                base = placeholder.rstrip("s")  
+                base = placeholder.rstrip("s").lower()  
                 category = base + "s"  
   
                 if category not in wordbank_cache:  
-                    logger.error(f"[ERROR] Category '{category}' not found in wordbank.")  
+                    logger.error(f"[ERROR] Category '{category}' not found in wordbank. Available: {list(wordbank_cache.keys())}")  
                     success = False  
                     break  
   
-                options = wordbank_cache.get(category, {})  
-                available_letters = list(options.keys())  
-                logger.debug(f"[DEBUG] '{category}' category has letters: {available_letters}")  
+                word_list = wordbank_cache[category].get(letter.upper(), [])  
   
-                word_list = options.get(letter.upper(), [])  
-                logger.debug(f"[DEBUG] Trying '{category}' -> '{letter.upper()}': {word_list}")  
+                logger.debug(f"[DEBUG] Looking for placeholder '{placeholder}' with letter '{letter}' in category '{category}'")  
   
                 if not word_list:  
-                    logger.warning(f"[WARNING] No match for placeholder '{placeholder}' and letter '{letter}' in category '{category}'")  
+                    logger.warning(f"[WARNING] No match for placeholder '{placeholder}' and letter '{letter}'")  
                     success = False  
                     break  
   
