@@ -62,13 +62,22 @@ def load_template_json():
         return json.load(f).get("TEMPLATES_BY_LENGTH", {})  
   
 def extract_letters(input_str):  
+    input_str = re.sub(r"[^a-zA-Z,\s]", "", input_str).strip()  # remove special chars
+
     if "," in input_str:  
-        parts = [p.strip().upper() for p in input_str.split(",") if p.strip()]  
-    elif re.match(r"^[a-zA-Z]+$", input_str.strip()):  
-        parts = list(input_str.strip().upper())  
-    else:  
-        parts = [w[0].upper() for w in re.findall(r'\b\w+', input_str)]  
-    return parts  
+        parts = [p.strip() for p in input_str.split(",") if p.strip()]  
+        if all(len(p) > 1 for p in parts):  # e.g. Akash,Tilak,Patal  
+            return [word[0].upper() for word in parts]  
+        return [p.upper() for p in parts]  
+
+    if re.fullmatch(r"[a-zA-Z]+", input_str):  
+        if len(input_str) <= 5:  
+            return list(input_str.upper())  # e.g. ATP  
+        else:  
+            return [ch[0].upper() for ch in re.findall(r'[A-Z][a-z]*', input_str) or input_str]  # try camel case split, else all initials
+
+    words = re.findall(r'\b\w+', input_str)  
+    return [w[0].upper() for w in words if w]  
   
 @router.get("/api/tricks")  
 def get_tricks(  
@@ -80,7 +89,7 @@ def get_tricks(
     logger.info(f"[API] Input Letters Raw: {letters}")  
   
     input_parts = extract_letters(letters)  
-    logger.info(f"[DEBUG] Normalized Input: {input_parts}")  
+    logger.info(f"[DEBUG] Normalized Input Letters: {input_parts}")  
   
     if not input_parts:  
         return {"trick": "Invalid input."}  
@@ -95,7 +104,7 @@ def get_tricks(
             if i % 2 == 1:  
                 word_list = preps.get(letter, []) or preps.get("_default", [])  
             else:  
-                word_list = nouns.get(letter, [])  
+                word_list = nouns.get(letter, []) or nouns.get("_default", [])  
   
             if word_list:  
                 word = random.choice(word_list)  
@@ -134,10 +143,9 @@ def get_tricks(
             logger.info(f"[DEBUG] Detected Placeholders: {placeholders}")  
   
             if len(placeholders) != len(input_parts):  
-                logger.info(f"[DEBUG] Skipping template due to placeholder count mismatch.")  
+                logger.info(f"[⚠️] Skipping template due to placeholder/letter mismatch.")  
                 continue  
   
-            used_letters = []  
             words = {}  
             success = True  
   
@@ -146,23 +154,21 @@ def get_tricks(
                 category = base + "s"  
   
                 if category not in wordbank_cache:  
-                    logger.error(f"[ERROR] Category '{category}' not found in wordbank. Available: {list(wordbank_cache.keys())}")  
+                    logger.error(f"[ERROR] Category '{category}' not found in wordbank.")  
                     success = False  
                     break  
   
-                word_list = wordbank_cache[category].get(letter.upper(), [])  
+                word_list = wordbank_cache[category].get(letter.upper(), []) or wordbank_cache[category].get("_default", [])  
   
-                logger.debug(f"[DEBUG] Looking for placeholder '{placeholder}' with letter '{letter}' in category '{category}'")  
+                logger.debug(f"[DEBUG] Lookup: '{placeholder}' -> Letter: '{letter}' -> Words: {word_list}")  
   
                 if not word_list:  
-                    logger.warning(f"[WARNING] No match for placeholder '{placeholder}' and letter '{letter}'")  
+                    logger.warning(f"[WARNING] No match found for placeholder '{placeholder}' and letter '{letter}'")  
                     success = False  
                     break  
   
                 selected_word = random.choice(word_list)  
                 words[placeholder] = selected_word  
-                used_letters.append(letter)  
-  
                 logger.info(f"[✔️] Selected '{selected_word}' for placeholder '{placeholder}' and letter '{letter}'")  
   
             if success:  
